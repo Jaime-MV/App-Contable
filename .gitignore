@@ -3,6 +3,11 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# Archivo de conexión local real
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
+
 # dotenv files
 .env
 
