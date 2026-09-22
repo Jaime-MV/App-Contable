@@ -13,6 +13,13 @@ namespace App_Contable.Presentacion
         private Button? _botonSeleccionado = null;
         private readonly DbContext _dbContext;
 
+        // Variables de control de animación del sidebar
+        private const int ANCHO_EXPANDIDO = 250;
+        private const int ANCHO_COLAPSADO = 60;
+        private const int VELOCIDAD_ANIMACION = 25;
+        private int _targetWidth = ANCHO_EXPANDIDO;
+        private bool _sidebarFijadoColapsado = false;
+
         public enum EstadoConexion
         {
             Desconectado,
@@ -51,6 +58,84 @@ namespace App_Contable.Presentacion
             formHijo.BringToFront();
             formHijo.Show();
         }
+
+        #region Animación y Colapso del Sidebar
+
+        private void btnToggleSidebar_Click(object sender, EventArgs e)
+        {
+            _sidebarFijadoColapsado = !_sidebarFijadoColapsado;
+            _targetWidth = _sidebarFijadoColapsado ? ANCHO_COLAPSADO : ANCHO_EXPANDIDO;
+            sidebarTimer.Start();
+        }
+
+        private void sidebarTimer_Tick(object sender, EventArgs e)
+        {
+            if (pnlSidebar.Width < _targetWidth)
+            {
+                pnlSidebar.Width = Math.Min(pnlSidebar.Width + VELOCIDAD_ANIMACION, _targetWidth);
+                if (pnlSidebar.Width >= _targetWidth)
+                {
+                    sidebarTimer.Stop();
+                    AjustarVisibilidadSidebar(expandido: true);
+                }
+            }
+            else if (pnlSidebar.Width > _targetWidth)
+            {
+                pnlSidebar.Width = Math.Max(pnlSidebar.Width - VELOCIDAD_ANIMACION, _targetWidth);
+                if (pnlSidebar.Width <= _targetWidth)
+                {
+                    sidebarTimer.Stop();
+                    AjustarVisibilidadSidebar(expandido: false);
+                }
+            }
+            else
+            {
+                sidebarTimer.Stop();
+            }
+        }
+
+        private void AjustarVisibilidadSidebar(bool expandido)
+        {
+            lblTituloApp.Visible = expandido;
+            lblSubtituloApp.Visible = expandido;
+            lblVersion.Visible = expandido;
+
+            if (expandido)
+            {
+                btnToggleSidebar.Location = new Point(10, 22);
+            }
+            else
+            {
+                btnToggleSidebar.Location = new Point((ANCHO_COLAPSADO - btnToggleSidebar.Width) / 2, 22);
+            }
+        }
+
+        private void pnlSidebar_MouseEnter(object sender, EventArgs e)
+        {
+            if (_sidebarFijadoColapsado && pnlSidebar.Width < ANCHO_EXPANDIDO)
+            {
+                _targetWidth = ANCHO_EXPANDIDO;
+                AjustarVisibilidadSidebar(expandido: true);
+                sidebarTimer.Start();
+            }
+        }
+
+        private void pnlSidebar_MouseLeave(object sender, EventArgs e)
+        {
+            if (_sidebarFijadoColapsado)
+            {
+                Point mousePos = pnlSidebar.PointToClient(Cursor.Position);
+                if (!pnlSidebar.ClientRectangle.Contains(mousePos))
+                {
+                    _targetWidth = ANCHO_COLAPSADO;
+                    sidebarTimer.Start();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Conexión a Base de Datos
 
         /// <summary>
         /// Actualiza el indicador visual y la etiqueta de estado de la base de datos.
@@ -138,6 +223,8 @@ namespace App_Contable.Presentacion
             }
         }
 
+        #endregion
+
         /// <summary>
         /// Resalta visualmente el botón seleccionado en el menú lateral.
         /// </summary>
@@ -182,7 +269,8 @@ namespace App_Contable.Presentacion
 
         private void btnKardex_Click(object sender, EventArgs e)
         {
-            ResaltarBotonMenu(btnKardex, "Tarjeta Kardex");
+            ResaltarBotonMenu(btnKardex, "Tarjeta Kardex de Inventarios");
+            AbrirFormularioEnPanel(new frmKardex());
         }
 
         private void btnBalanzaComprobacion_Click(object sender, EventArgs e)

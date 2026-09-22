@@ -28,6 +28,7 @@ namespace App_Contable.Presentacion
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.pnlSidebar = new System.Windows.Forms.Panel();
             this.pnlNavMenu = new System.Windows.Forms.Panel();
             this.btnCatalogoCuentas = new System.Windows.Forms.Button();
@@ -40,6 +41,7 @@ namespace App_Contable.Presentacion
             this.pnlSidebarFooter = new System.Windows.Forms.Panel();
             this.lblVersion = new System.Windows.Forms.Label();
             this.pnlLogo = new System.Windows.Forms.Panel();
+            this.btnToggleSidebar = new System.Windows.Forms.Button();
             this.pnlLogoDivider = new System.Windows.Forms.Panel();
             this.lblSubtituloApp = new System.Windows.Forms.Label();
             this.lblTituloApp = new System.Windows.Forms.Label();
@@ -54,6 +56,7 @@ namespace App_Contable.Presentacion
             this.pnlBienvenida = new System.Windows.Forms.Panel();
             this.lblBienvenidaSub = new System.Windows.Forms.Label();
             this.lblBienvenidaTitulo = new System.Windows.Forms.Label();
+            this.sidebarTimer = new System.Windows.Forms.Timer(this.components);
             this.pnlSidebar.SuspendLayout();
             this.pnlNavMenu.SuspendLayout();
             this.pnlSidebarFooter.SuspendLayout();
@@ -75,6 +78,8 @@ namespace App_Contable.Presentacion
             this.pnlSidebar.Name = "pnlSidebar";
             this.pnlSidebar.Size = new System.Drawing.Size(250, 700);
             this.pnlSidebar.TabIndex = 0;
+            this.pnlSidebar.MouseEnter += new System.EventHandler(this.pnlSidebar_MouseEnter);
+            this.pnlSidebar.MouseLeave += new System.EventHandler(this.pnlSidebar_MouseLeave);
             // 
             // pnlNavMenu
             // 
@@ -92,6 +97,8 @@ namespace App_Contable.Presentacion
             this.pnlNavMenu.Padding = new System.Windows.Forms.Padding(0, 10, 0, 10);
             this.pnlNavMenu.Size = new System.Drawing.Size(250, 565);
             this.pnlNavMenu.TabIndex = 1;
+            this.pnlNavMenu.MouseEnter += new System.EventHandler(this.pnlSidebar_MouseEnter);
+            this.pnlNavMenu.MouseLeave += new System.EventHandler(this.pnlSidebar_MouseLeave);
             // 
             // btnCatalogoCuentas
             // 
@@ -105,10 +112,10 @@ namespace App_Contable.Presentacion
             this.btnCatalogoCuentas.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(229)))), ((int)(((byte)(231)))), ((int)(((byte)(235)))));
             this.btnCatalogoCuentas.Location = new System.Drawing.Point(0, 298);
             this.btnCatalogoCuentas.Name = "btnCatalogoCuentas";
-            this.btnCatalogoCuentas.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
+            this.btnCatalogoCuentas.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnCatalogoCuentas.Size = new System.Drawing.Size(250, 48);
             this.btnCatalogoCuentas.TabIndex = 6;
-            this.btnCatalogoCuentas.Text = "  Catálogo de Cuentas";
+            this.btnCatalogoCuentas.Text = "  📁  Catálogo de Cuentas";
             this.btnCatalogoCuentas.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnCatalogoCuentas.UseVisualStyleBackColor = true;
             this.btnCatalogoCuentas.Click += new System.EventHandler(this.btnCatalogoCuentas_Click);
@@ -125,10 +132,10 @@ namespace App_Contable.Presentacion
             this.btnBalanzaComprobacion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(229)))), ((int)(((byte)(231)))), ((int)(((byte)(235)))));
             this.btnBalanzaComprobacion.Location = new System.Drawing.Point(0, 250);
             this.btnBalanzaComprobacion.Name = "btnBalanzaComprobacion";
-            this.btnBalanzaComprobacion.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
+            this.btnBalanzaComprobacion.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnBalanzaComprobacion.Size = new System.Drawing.Size(250, 48);
             this.btnBalanzaComprobacion.TabIndex = 5;
-            this.btnBalanzaComprobacion.Text = "  Balanza de Comprobación";
+            this.btnBalanzaComprobacion.Text = "  ⚖️  Balanza de Comprobación";
             this.btnBalanzaComprobacion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnBalanzaComprobacion.UseVisualStyleBackColor = true;
             this.btnBalanzaComprobacion.Click += new System.EventHandler(this.btnBalanzaComprobacion_Click);
@@ -145,10 +152,10 @@ namespace App_Contable.Presentacion
             this.btnKardex.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(229)))), ((int)(((byte)(231)))), ((int)(((byte)(235)))));
             this.btnKardex.Location = new System.Drawing.Point(0, 202);
             this.btnKardex.Name = "btnKardex";
-            this.btnKardex.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
+            this.btnKardex.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnKardex.Size = new System.Drawing.Size(250, 48);
             this.btnKardex.TabIndex = 4;
-            this.btnKardex.Text = "  Tarjeta Kardex";
+            this.btnKardex.Text = "  📦  Tarjeta Kardex";
             this.btnKardex.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnKardex.UseVisualStyleBackColor = true;
             this.btnKardex.Click += new System.EventHandler(this.btnKardex_Click);
@@ -165,10 +172,10 @@ namespace App_Contable.Presentacion
             this.btnEstadoResultados.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(229)))), ((int)(((byte)(231)))), ((int)(((byte)(235)))));
             this.btnEstadoResultados.Location = new System.Drawing.Point(0, 154);
             this.btnEstadoResultados.Name = "btnEstadoResultados";
-            this.btnEstadoResultados.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
+            this.btnEstadoResultados.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnEstadoResultados.Size = new System.Drawing.Size(250, 48);
             this.btnEstadoResultados.TabIndex = 3;
-            this.btnEstadoResultados.Text = "  Estado de Resultados";
+            this.btnEstadoResultados.Text = "  📈  Estado de Resultados";
             this.btnEstadoResultados.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnEstadoResultados.UseVisualStyleBackColor = true;
             this.btnEstadoResultados.Click += new System.EventHandler(this.btnEstadoResultados_Click);
@@ -185,10 +192,10 @@ namespace App_Contable.Presentacion
             this.btnBalanceGeneral.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(229)))), ((int)(((byte)(231)))), ((int)(((byte)(235)))));
             this.btnBalanceGeneral.Location = new System.Drawing.Point(0, 106);
             this.btnBalanceGeneral.Name = "btnBalanceGeneral";
-            this.btnBalanceGeneral.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
+            this.btnBalanceGeneral.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnBalanceGeneral.Size = new System.Drawing.Size(250, 48);
             this.btnBalanceGeneral.TabIndex = 2;
-            this.btnBalanceGeneral.Text = "  Balance General";
+            this.btnBalanceGeneral.Text = "  🏛️  Balance General";
             this.btnBalanceGeneral.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnBalanceGeneral.UseVisualStyleBackColor = true;
             this.btnBalanceGeneral.Click += new System.EventHandler(this.btnBalanceGeneral_Click);
@@ -205,10 +212,10 @@ namespace App_Contable.Presentacion
             this.btnLibroMayor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(229)))), ((int)(((byte)(231)))), ((int)(((byte)(235)))));
             this.btnLibroMayor.Location = new System.Drawing.Point(0, 58);
             this.btnLibroMayor.Name = "btnLibroMayor";
-            this.btnLibroMayor.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
+            this.btnLibroMayor.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnLibroMayor.Size = new System.Drawing.Size(250, 48);
             this.btnLibroMayor.TabIndex = 1;
-            this.btnLibroMayor.Text = "  Libro Mayor";
+            this.btnLibroMayor.Text = "  📖  Libro Mayor";
             this.btnLibroMayor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnLibroMayor.UseVisualStyleBackColor = true;
             this.btnLibroMayor.Click += new System.EventHandler(this.btnLibroMayor_Click);
@@ -225,10 +232,10 @@ namespace App_Contable.Presentacion
             this.btnLibroDiario.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(229)))), ((int)(((byte)(231)))), ((int)(((byte)(235)))));
             this.btnLibroDiario.Location = new System.Drawing.Point(0, 10);
             this.btnLibroDiario.Name = "btnLibroDiario";
-            this.btnLibroDiario.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
+            this.btnLibroDiario.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnLibroDiario.Size = new System.Drawing.Size(250, 48);
             this.btnLibroDiario.TabIndex = 0;
-            this.btnLibroDiario.Text = "  Libro Diario";
+            this.btnLibroDiario.Text = "  📝  Libro Diario";
             this.btnLibroDiario.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnLibroDiario.UseVisualStyleBackColor = true;
             this.btnLibroDiario.Click += new System.EventHandler(this.btnLibroDiario_Click);
@@ -258,6 +265,7 @@ namespace App_Contable.Presentacion
             // pnlLogo
             // 
             this.pnlLogo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(24)))), ((int)(((byte)(39)))));
+            this.pnlLogo.Controls.Add(this.btnToggleSidebar);
             this.pnlLogo.Controls.Add(this.pnlLogoDivider);
             this.pnlLogo.Controls.Add(this.lblSubtituloApp);
             this.pnlLogo.Controls.Add(this.lblTituloApp);
@@ -266,6 +274,23 @@ namespace App_Contable.Presentacion
             this.pnlLogo.Name = "pnlLogo";
             this.pnlLogo.Size = new System.Drawing.Size(250, 85);
             this.pnlLogo.TabIndex = 0;
+            // 
+            // btnToggleSidebar
+            // 
+            this.btnToggleSidebar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnToggleSidebar.FlatAppearance.BorderSize = 0;
+            this.btnToggleSidebar.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
+            this.btnToggleSidebar.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(30)))), ((int)(((byte)(54)))));
+            this.btnToggleSidebar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnToggleSidebar.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.btnToggleSidebar.ForeColor = System.Drawing.Color.White;
+            this.btnToggleSidebar.Location = new System.Drawing.Point(10, 22);
+            this.btnToggleSidebar.Name = "btnToggleSidebar";
+            this.btnToggleSidebar.Size = new System.Drawing.Size(38, 38);
+            this.btnToggleSidebar.TabIndex = 0;
+            this.btnToggleSidebar.Text = "☰";
+            this.btnToggleSidebar.UseVisualStyleBackColor = true;
+            this.btnToggleSidebar.Click += new System.EventHandler(this.btnToggleSidebar_Click);
             // 
             // pnlLogoDivider
             // 
@@ -281,21 +306,21 @@ namespace App_Contable.Presentacion
             this.lblSubtituloApp.AutoSize = true;
             this.lblSubtituloApp.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.lblSubtituloApp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(156)))), ((int)(((byte)(163)))), ((int)(((byte)(175)))));
-            this.lblSubtituloApp.Location = new System.Drawing.Point(18, 48);
+            this.lblSubtituloApp.Location = new System.Drawing.Point(54, 48);
             this.lblSubtituloApp.Name = "lblSubtituloApp";
             this.lblSubtituloApp.Size = new System.Drawing.Size(125, 13);
-            this.lblSubtituloApp.TabIndex = 1;
+            this.lblSubtituloApp.TabIndex = 2;
             this.lblSubtituloApp.Text = "Gestión Financiera v1.0";
             // 
             // lblTituloApp
             // 
             this.lblTituloApp.AutoSize = true;
-            this.lblTituloApp.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblTituloApp.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.lblTituloApp.ForeColor = System.Drawing.Color.White;
-            this.lblTituloApp.Location = new System.Drawing.Point(18, 22);
+            this.lblTituloApp.Location = new System.Drawing.Point(54, 25);
             this.lblTituloApp.Name = "lblTituloApp";
-            this.lblTituloApp.Size = new System.Drawing.Size(166, 21);
-            this.lblTituloApp.TabIndex = 0;
+            this.lblTituloApp.Size = new System.Drawing.Size(152, 20);
+            this.lblTituloApp.TabIndex = 1;
             this.lblTituloApp.Text = "SISTEMA CONTABLE";
             // 
             // pnlTopBar
@@ -421,6 +446,11 @@ namespace App_Contable.Presentacion
             this.lblBienvenidaTitulo.Text = "Bienvenido al Sistema Contable";
             this.lblBienvenidaTitulo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // sidebarTimer
+            // 
+            this.sidebarTimer.Interval = 10;
+            this.sidebarTimer.Tick += new System.EventHandler(this.sidebarTimer_Tick);
+            // 
             // FrmMenuPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -453,6 +483,7 @@ namespace App_Contable.Presentacion
 
         private System.Windows.Forms.Panel pnlSidebar;
         private System.Windows.Forms.Panel pnlLogo;
+        private System.Windows.Forms.Button btnToggleSidebar;
         private System.Windows.Forms.Label lblTituloApp;
         private System.Windows.Forms.Label lblSubtituloApp;
         private System.Windows.Forms.Panel pnlLogoDivider;
@@ -477,6 +508,7 @@ namespace App_Contable.Presentacion
         private System.Windows.Forms.Panel pnlBienvenida;
         private System.Windows.Forms.Label lblBienvenidaTitulo;
         private System.Windows.Forms.Label lblBienvenidaSub;
+        private System.Windows.Forms.Timer sidebarTimer;
     }
 }
 
