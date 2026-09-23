@@ -33,6 +33,7 @@ namespace App_Contable.Presentacion
             InitializeComponent();
             _dbContext = new DbContext();
             ActualizarEstadoConexion(EstadoConexion.Desconectado, "Estado BD: Pendiente de prueba");
+            btnLibroDiario_Click(btnLibroDiario, EventArgs.Empty);
         }
 
         /// <summary>
@@ -249,7 +250,8 @@ namespace App_Contable.Presentacion
 
         private void btnLibroDiario_Click(object sender, EventArgs e)
         {
-            ResaltarBotonMenu(btnLibroDiario, "Libro Diario");
+            ResaltarBotonMenu(btnLibroDiario, "Libro Diario General");
+            AbrirFormularioEnPanel(new frmLibroDiario());
         }
 
         private void btnLibroMayor_Click(object sender, EventArgs e)
