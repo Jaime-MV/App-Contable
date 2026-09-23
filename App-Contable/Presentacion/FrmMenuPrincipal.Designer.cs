@@ -215,7 +215,7 @@ namespace App_Contable.Presentacion
             this.btnLibroMayor.Padding = new System.Windows.Forms.Padding(18, 0, 0, 0);
             this.btnLibroMayor.Size = new System.Drawing.Size(250, 48);
             this.btnLibroMayor.TabIndex = 1;
-            this.btnLibroMayor.Text = "  📖  Libro Mayor";
+            this.btnLibroMayor.Text = "  📖  Mayorización";
             this.btnLibroMayor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnLibroMayor.UseVisualStyleBackColor = true;
             this.btnLibroMayor.Click += new System.EventHandler(this.btnLibroMayor_Click);

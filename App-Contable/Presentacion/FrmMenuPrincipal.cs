@@ -256,7 +256,8 @@ namespace App_Contable.Presentacion
 
         private void btnLibroMayor_Click(object sender, EventArgs e)
         {
-            ResaltarBotonMenu(btnLibroMayor, "Libro Mayor");
+            ResaltarBotonMenu(btnLibroMayor, "Mayorización");
+            AbrirFormularioEnPanel(new frmMayorizacion());
         }
 
         private void btnBalanceGeneral_Click(object sender, EventArgs e)
