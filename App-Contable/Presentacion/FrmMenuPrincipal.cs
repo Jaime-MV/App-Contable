@@ -263,6 +263,7 @@ namespace App_Contable.Presentacion
         private void btnBalanceGeneral_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnBalanceGeneral, "Balance General");
+            AbrirFormularioEnPanel(new frmBalanceGeneral());
         }
 
         private void btnEstadoResultados_Click(object sender, EventArgs e)

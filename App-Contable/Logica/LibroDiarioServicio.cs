@@ -10,6 +10,13 @@ namespace App_Contable.Logica
         private static LibroDiarioServicio? _instancia;
         public static LibroDiarioServicio Instancia => _instancia ??= new LibroDiarioServicio();
 
+        public event Action? DatosModificados;
+
+        private void NotificarCambios()
+        {
+            DatosModificados?.Invoke();
+        }
+
         private readonly List<AsientoContable> _asientos = new();
 
         public LibroDiarioServicio()
@@ -57,6 +64,7 @@ namespace App_Contable.Logica
 
             _asientos.Add(asiento);
             mensajeError = string.Empty;
+            NotificarCambios();
             return true;
         }
 
@@ -67,6 +75,7 @@ namespace App_Contable.Logica
             {
                 _asientos.Remove(encontrado);
                 RenumerarAsientos();
+                NotificarCambios();
                 return true;
             }
             return false;
@@ -110,6 +119,7 @@ namespace App_Contable.Logica
             
             _asientos[indice] = asientoActualizado;
             mensajeError = string.Empty;
+            NotificarCambios();
             return true;
         }
 
@@ -122,6 +132,7 @@ namespace App_Contable.Logica
                 _asientos[indice] = _asientos[indice - 1];
                 _asientos[indice - 1] = actual;
                 RenumerarAsientos();
+                NotificarCambios();
             }
         }
 
@@ -134,12 +145,14 @@ namespace App_Contable.Logica
                 _asientos[indice] = _asientos[indice + 1];
                 _asientos[indice + 1] = actual;
                 RenumerarAsientos();
+                NotificarCambios();
             }
         }
 
         public void LimpiarTodo()
         {
             _asientos.Clear();
+            NotificarCambios();
         }
 
         /// <summary>
@@ -354,6 +367,8 @@ namespace App_Contable.Logica
                 }
             };
             _asientos.Add(partida3);
+
+            NotificarCambios();
         }
     }
 }
