@@ -11,6 +11,9 @@ namespace App_Contable.Presentacion
         private readonly decimal _costoPromedioActual;
         private readonly decimal _saldoValorActual;
 
+        private readonly KardexItem? _itemEnEdicion;
+        private readonly bool _esEdicion;
+
         public KardexItem? MovimientoCreado { get; private set; }
 
         public frmAgregarMovimientoKardex(decimal stockActual = 0m, decimal costoPromedioActual = 0m, decimal saldoValorActual = 0m)
@@ -19,9 +22,23 @@ namespace App_Contable.Presentacion
             _stockActual = stockActual;
             _costoPromedioActual = costoPromedioActual;
             _saldoValorActual = saldoValorActual;
+            _esEdicion = false;
 
             ConfigurarAutocompletado();
             InicializarValores();
+        }
+
+        public frmAgregarMovimientoKardex(KardexItem itemExistente, decimal stockActual = 0m, decimal costoPromedioActual = 0m, decimal saldoValorActual = 0m)
+        {
+            InitializeComponent();
+            _itemEnEdicion = itemExistente;
+            _esEdicion = true;
+            _stockActual = stockActual;
+            _costoPromedioActual = costoPromedioActual;
+            _saldoValorActual = saldoValorActual;
+
+            ConfigurarAutocompletado();
+            CargarDatosEdicion(itemExistente);
         }
 
         private void ConfigurarAutocompletado()
@@ -52,10 +69,39 @@ namespace App_Contable.Presentacion
 
         private void InicializarValores()
         {
+            lblTituloModal.Text = "↓ Registrar Movimiento de Kardex";
+            btnGuardar.Text = "💾 Guardar Movimiento";
             dtpFecha.Value = new DateTime(2026, 9, 23);
             cmbTipoMovimiento.SelectedIndex = 0; // Entrada por defecto
             numCostoUnitario.Value = _costoPromedioActual > 0 ? _costoPromedioActual : 8.5000m;
             numCantidad.Value = 100m;
+
+            RecalcularProyecciones();
+        }
+
+        private void CargarDatosEdicion(KardexItem item)
+        {
+            lblTituloModal.Text = "✏️ Editar Movimiento de Kardex";
+            lblSubtituloModal.Text = $"Modificando movimiento Ref: {item.Documento} ({item.Concepto})";
+            btnGuardar.Text = "💾 Guardar Cambios";
+
+            dtpFecha.Value = item.Fecha;
+            bool esEntrada = item.CantidadEntrada.HasValue && item.CantidadEntrada.Value > 0;
+            cmbTipoMovimiento.SelectedIndex = esEntrada ? 0 : 1;
+
+            txtConcepto.Text = item.Concepto;
+            txtDocumento.Text = item.Documento;
+
+            numCantidad.Value = esEntrada ? (item.CantidadEntrada ?? 100m) : (item.CantidadSalida ?? 100m);
+            numCostoUnitario.Value = item.CostoUnitario > 0 ? item.CostoUnitario : (_costoPromedioActual > 0 ? _costoPromedioActual : 8.5000m);
+
+            if (!esEntrada)
+            {
+                lblCosto.Text = "Costo Promedio Vigente ($ - Auto):";
+                numCostoUnitario.Enabled = false;
+                numCostoUnitario.ReadOnly = true;
+                numCostoUnitario.BackColor = Color.FromArgb(243, 244, 246);
+            }
 
             RecalcularProyecciones();
         }
@@ -128,7 +174,7 @@ namespace App_Contable.Presentacion
                 lblImporteCalculado.Text = $"• Importe Total del Movimiento: ${importe:N2} (Imputación: HABER / Costo de Venta)";
                 lblImporteCalculado.ForeColor = Color.FromArgb(194, 65, 12); // Ámbar quemado (#C2410C)
 
-                if (nuevoStock < 0)
+                if (nuevoStock < 0 && !_esEdicion)
                 {
                     lblNuevoStockEstimado.Text = $"• ⚠ Stock Insuficiente: {_stockActual:N2} - {cantidad:N2} = {nuevoStock:N2} unidades (Déficit)";
                     lblNuevoStockEstimado.ForeColor = Color.FromArgb(185, 28, 28); // Rojo óxido (#B91C1C)
@@ -169,7 +215,7 @@ namespace App_Contable.Presentacion
 
             bool esEntrada = cmbTipoMovimiento.SelectedIndex == 0;
 
-            if (!esEntrada && numCantidad.Value > _stockActual)
+            if (!_esEdicion && !esEntrada && numCantidad.Value > _stockActual)
             {
                 MessageBox.Show(
                     $"No es posible registrar la salida.\n\nEl stock físico actual es de {_stockActual:N2} unidades y se intentan egresar {numCantidad.Value:N2} unidades.",
@@ -189,14 +235,15 @@ namespace App_Contable.Presentacion
 
             MovimientoCreado = new KardexItem
             {
-                Id = DateTime.Now.Ticks,
+                Id = _esEdicion && _itemEnEdicion != null ? _itemEnEdicion.Id : DateTime.Now.Ticks,
                 Fecha = dtpFecha.Value.Date,
                 Concepto = txtConcepto.Text.Trim(),
                 Documento = txtDocumento.Text.Trim(),
                 CantidadEntrada = esEntrada ? numCantidad.Value : null,
                 CantidadSalida = !esEntrada ? numCantidad.Value : null,
                 CostoUnitario = esEntrada ? numCostoUnitario.Value : _costoPromedioActual,
-                Origen = TipoOrigenKardex.Manual,
+                Origen = _esEdicion && _itemEnEdicion != null ? _itemEnEdicion.Origen : TipoOrigenKardex.Manual,
+                NumeroAsiento = _esEdicion && _itemEnEdicion != null ? _itemEnEdicion.NumeroAsiento : null,
                 TipoMovimiento = esEntrada ? TipoMovimientoKardex.Compra : TipoMovimientoKardex.Venta,
                 EsFilaEspecial = false
             };
