@@ -30,6 +30,7 @@ namespace App_Contable.Presentacion
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            this.btnVolver = new System.Windows.Forms.Button();
             this.pnlToolbar = new System.Windows.Forms.Panel();
             this.lblTituloSeccion = new System.Windows.Forms.Label();
             this.pnlFiltroFechas = new System.Windows.Forms.Panel();
@@ -73,6 +74,7 @@ namespace App_Contable.Presentacion
             // pnlToolbar
             // 
             this.pnlToolbar.BackColor = System.Drawing.Color.White;
+            this.pnlToolbar.Controls.Add(this.btnVolver);
             this.pnlToolbar.Controls.Add(this.btnSubirMovimiento);
             this.pnlToolbar.Controls.Add(this.btnBajarMovimiento);
             this.pnlToolbar.Controls.Add(this.btnEditarMovimiento);
@@ -88,12 +90,28 @@ namespace App_Contable.Presentacion
             this.pnlToolbar.Size = new System.Drawing.Size(1200, 72);
             this.pnlToolbar.TabIndex = 0;
             // 
+            // btnVolver
+            // 
+            this.btnVolver.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(250)))), ((int)(((byte)(252)))));
+            this.btnVolver.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnVolver.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
+            this.btnVolver.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnVolver.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.btnVolver.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
+            this.btnVolver.Location = new System.Drawing.Point(16, 18);
+            this.btnVolver.Name = "btnVolver";
+            this.btnVolver.Size = new System.Drawing.Size(90, 36);
+            this.btnVolver.TabIndex = 9;
+            this.btnVolver.Text = "← Volver";
+            this.btnVolver.UseVisualStyleBackColor = false;
+            this.btnVolver.Click += new System.EventHandler(this.btnVolver_Click);
+            // 
             // lblTituloSeccion
             // 
             this.lblTituloSeccion.AutoSize = true;
             this.lblTituloSeccion.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.lblTituloSeccion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.lblTituloSeccion.Location = new System.Drawing.Point(16, 24);
+            this.lblTituloSeccion.Location = new System.Drawing.Point(118, 25);
             this.lblTituloSeccion.Name = "lblTituloSeccion";
             this.lblTituloSeccion.Size = new System.Drawing.Size(147, 21);
             this.lblTituloSeccion.TabIndex = 0;
@@ -106,7 +124,7 @@ namespace App_Contable.Presentacion
             this.pnlFiltroFechas.Controls.Add(this.lblFlechaRango);
             this.pnlFiltroFechas.Controls.Add(this.dtpFechaInicio);
             this.pnlFiltroFechas.Controls.Add(this.lblPeriodo);
-            this.pnlFiltroFechas.Location = new System.Drawing.Point(175, 16);
+            this.pnlFiltroFechas.Location = new System.Drawing.Point(272, 16);
             this.pnlFiltroFechas.Name = "pnlFiltroFechas";
             this.pnlFiltroFechas.Size = new System.Drawing.Size(370, 38);
             this.pnlFiltroFechas.TabIndex = 1;
@@ -315,8 +333,9 @@ namespace App_Contable.Presentacion
             dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
             dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(239)))), ((int)(((byte)(246)))), ((int)(((byte)(255)))));
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dgvKardex.DefaultCellStyle = dataGridViewCellStyle2;
+            this.dgvKardex.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCellsExceptHeaders;
             this.dgvKardex.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvKardex.EnableHeadersVisualStyles = false;
             this.dgvKardex.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
@@ -520,6 +539,7 @@ namespace App_Contable.Presentacion
         #endregion
 
         private System.Windows.Forms.Panel pnlToolbar;
+        private System.Windows.Forms.Button btnVolver;
         private System.Windows.Forms.Label lblTituloSeccion;
         private System.Windows.Forms.Panel pnlFiltroFechas;
         private System.Windows.Forms.Label lblPeriodo;

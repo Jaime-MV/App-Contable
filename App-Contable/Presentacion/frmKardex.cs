@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using App_Contable.Logica;
@@ -13,16 +14,79 @@ namespace App_Contable.Presentacion
 {
     public partial class frmKardex : Form
     {
+        private static readonly CultureInfo UsCulture = new("en-US");
+
         // Origen de datos en memoria (BindingList sin llamadas a base de datos)
         private readonly BindingList<KardexItem> _movimientosBase = new();
         private List<KardexItem> _movimientosVisualizados = new();
         private ResumenConciliacionKardex _resumenActual = new();
+        private MetodoValuacion _metodoValuacion = MetodoValuacion.PromedioPonderado;
 
         public frmKardex()
         {
             InitializeComponent();
             ConfigurarFormulario();
             InicializarEstado();
+        }
+
+        public frmKardex(LibroDiarioInstancia libro)
+        {
+            InitializeComponent();
+            ConfigurarFormulario();
+
+            lblTituloSeccion.Text = $"KARDEX — {libro.Nombre}";
+            dtpFechaInicio.Value = libro.FechaInicio;
+            dtpFechaFin.Value = libro.FechaFin;
+
+            _movimientosBase.Clear();
+            var resultadoExtraccion = KardexServicio.GenerarKardexDesdeLibroDiario(libro, _metodoValuacion);
+            foreach (var m in resultadoExtraccion.MovimientosBase)
+            {
+                _movimientosBase.Add(m);
+            }
+
+            RecalcularYRefrescarGrilla();
+        }
+
+        public frmKardex(KardexInstancia tarjeta)
+        {
+            InitializeComponent();
+            ConfigurarFormulario();
+
+            lblTituloSeccion.Text = $"KARDEX — {tarjeta.Nombre}";
+            _metodoValuacion = tarjeta.Metodo;
+            dtpFechaInicio.Value = tarjeta.FechaInicio;
+            dtpFechaFin.Value = tarjeta.FechaFin;
+
+            _movimientosBase.Clear();
+            foreach (var m in tarjeta.Movimientos.Where(x => !x.EsFilaEspecial))
+            {
+                _movimientosBase.Add(m);
+            }
+
+            RecalcularYRefrescarGrilla();
+        }
+
+        public frmKardex(IEnumerable<KardexItem> movimientos, string titulo, DateTime? inicio = null, DateTime? fin = null)
+        {
+            InitializeComponent();
+            ConfigurarFormulario();
+
+            if (!string.IsNullOrWhiteSpace(titulo))
+            {
+                lblTituloSeccion.Text = titulo;
+            }
+
+            if (inicio.HasValue) dtpFechaInicio.Value = inicio.Value;
+            if (fin.HasValue) dtpFechaFin.Value = fin.Value;
+
+            _movimientosBase.Clear();
+            foreach (var m in movimientos.Where(x => !x.EsFilaEspecial))
+            {
+                _movimientosBase.Add(m);
+            }
+
+            RecalcularYRefrescarGrilla();
         }
 
         private void ConfigurarFormulario()
@@ -39,6 +103,8 @@ namespace App_Contable.Presentacion
             dgvKardex.AutoGenerateColumns = false;
             dgvKardex.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvKardex.ColumnHeadersHeight = 56;
+            dgvKardex.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            dgvKardex.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCellsExceptHeaders;
             dgvKardex.DoubleBuffered(true);
 
             // Desactivar ordenamiento por columnas para preservar la cronología del inventario
@@ -67,7 +133,7 @@ namespace App_Contable.Presentacion
             var fechaInicio = dtpFechaInicio.Value.Date;
             var fechaFin = dtpFechaFin.Value.Date;
 
-            var resultado = KardexCalculador.ProcesarKardex(_movimientosBase, fechaInicio, fechaFin);
+            var resultado = KardexServicio.ValuarMovimientos(_movimientosBase, fechaInicio, fechaFin, _metodoValuacion);
             _movimientosVisualizados = resultado.ListaProcesada;
             _resumenActual = resultado.Resumen;
 
@@ -110,32 +176,32 @@ namespace App_Contable.Presentacion
 
                 // 3: Entrada Cant
                 row.Cells[3].Value = item.CantidadEntrada.HasValue && item.CantidadEntrada.Value > 0
-                    ? item.CantidadEntrada.Value.ToString("N0")
+                    ? item.CantidadEntrada.Value.ToString("N0", UsCulture)
                     : "—";
 
                 // 4: Salida Cant
                 row.Cells[4].Value = item.CantidadSalida.HasValue && item.CantidadSalida.Value > 0
-                    ? item.CantidadSalida.Value.ToString("N0")
+                    ? item.CantidadSalida.Value.ToString("N0", UsCulture)
                     : "—";
 
                 // 5: Saldo Cant
-                row.Cells[5].Value = item.CantidadSaldo.ToString("N0");
+                row.Cells[5].Value = item.CantidadSaldo.ToString("N0", UsCulture);
 
-                // 6: Costo Unitario
-                row.Cells[6].Value = $"${item.CostoUnitario:N4}";
+                // 6: Costo Unitario (Forzado en USD $#,##0.0000)
+                row.Cells[6].Value = item.CostoUnitario.ToString("$#,##0.0000", UsCulture);
 
-                // 7: Debe ($)
+                // 7: Debe ($) (Forzado en USD $#,##0.00)
                 row.Cells[7].Value = item.Debe.HasValue && item.Debe.Value > 0
-                    ? $"${item.Debe.Value:N2}"
+                    ? item.Debe.Value.ToString("$#,##0.00", UsCulture)
                     : "—";
 
-                // 8: Haber ($)
+                // 8: Haber ($) (Forzado en USD $#,##0.00)
                 row.Cells[8].Value = item.Haber.HasValue && item.Haber.Value > 0
-                    ? $"${item.Haber.Value:N2}"
+                    ? item.Haber.Value.ToString("$#,##0.00", UsCulture)
                     : "—";
 
-                // 9: Saldo Valor ($)
-                row.Cells[9].Value = $"${item.SaldoValor:N2}";
+                // 9: Saldo Valor ($) (Forzado en USD $#,##0.00)
+                row.Cells[9].Value = item.SaldoValor.ToString("$#,##0.00", UsCulture);
 
                 // 10: Origen
                 row.Cells[10].Value = item.TextoOrigenBadge;
@@ -166,9 +232,10 @@ namespace App_Contable.Presentacion
             }
             else
             {
-                lblTotalEntradas.Text = $"Entradas: {_resumenActual.TotalEntradasFisicas:N0} uds (${_resumenActual.TotalDebe:N2})";
-                lblTotalSalidas.Text = $"Salidas: {_resumenActual.TotalSalidasFisicas:N0} uds (${_resumenActual.TotalHaber:N2})";
-                lblSaldoFinal.Text = $"Saldo Final: {_resumenActual.SaldoFisicoFinal:N0} uds (${_resumenActual.SaldoValorFinal:N2})";
+                string metodoTexto = _metodoValuacion == MetodoValuacion.PEPS ? "PEPS (FIFO)" : "Costo Promedio Ponderado";
+                lblTotalEntradas.Text = $"Entradas: {_resumenActual.TotalEntradasFisicas.ToString("N0", UsCulture)} uds ({_resumenActual.TotalDebe.ToString("$#,##0.00", UsCulture)})";
+                lblTotalSalidas.Text = $"Salidas: {_resumenActual.TotalSalidasFisicas.ToString("N0", UsCulture)} uds ({_resumenActual.TotalHaber.ToString("$#,##0.00", UsCulture)})";
+                lblSaldoFinal.Text = $"Saldo Final: {_resumenActual.SaldoFisicoFinal.ToString("N0", UsCulture)} uds ({_resumenActual.SaldoValorFinal.ToString("$#,##0.00", UsCulture)})";
 
                 if (_resumenActual.SaldoFisicoFinal < 0)
                 {
@@ -177,7 +244,7 @@ namespace App_Contable.Presentacion
                 }
                 else
                 {
-                    lblBadgeEstado.Text = "✓ Valuado (Costo Promedio Ponderado)";
+                    lblBadgeEstado.Text = $"✓ Valuado ({metodoTexto})";
                     lblBadgeEstado.ForeColor = Color.FromArgb(21, 128, 61);
                 }
             }
@@ -204,7 +271,7 @@ namespace App_Contable.Presentacion
             DibujarSuperEncabezado(g, 0, 2, "DATOS DE CONTROL", bgEncabezadoUnificado, textEncabezado, fontHeader, borderPen, superHeaderHeight);
             DibujarSuperEncabezado(g, 3, 5, "CANTIDADES / UNIDADES FÍSICAS", bgEncabezadoUnificado, textEncabezado, fontHeader, borderPen, superHeaderHeight);
             DibujarSuperEncabezado(g, 6, 6, "COSTO", bgEncabezadoUnificado, textEncabezado, fontHeader, borderPen, superHeaderHeight);
-            DibujarSuperEncabezado(g, 7, 9, "VALORES MONETARIOS", bgEncabezadoUnificado, textEncabezado, fontHeader, borderPen, superHeaderHeight);
+            DibujarSuperEncabezado(g, 7, 9, "VALORES MONETARIOS (USD)", bgEncabezadoUnificado, textEncabezado, fontHeader, borderPen, superHeaderHeight);
             DibujarSuperEncabezado(g, 10, 10, "ORIGEN", bgEncabezadoUnificado, textEncabezado, fontHeader, borderPen, superHeaderHeight);
 
             // 2. Sub-encabezados de cada columna (Nivel 2 - Inferior)
@@ -480,7 +547,12 @@ namespace App_Contable.Presentacion
 
         #endregion
 
-        #region Eventos de Botones de Acción (Nuevo, Editar, Eliminar, Reordenar, Cargar Ejemplo)
+        #region Eventos de Botones de Acción (Volver, Nuevo, Editar, Eliminar, Reordenar, Cargar Ejemplo)
+
+        private void btnVolver_Click(object? sender, EventArgs e)
+        {
+            NavegacionHelper.NavegarA(this, new frmInicioKardex());
+        }
 
         private void btnNuevoMovimiento_Click(object sender, EventArgs e)
         {
@@ -629,7 +701,7 @@ namespace App_Contable.Presentacion
     }
 
     /// <summary>
-    /// Extensión para habilitar doble buffer en controles DataGridView de WinForms.
+    /// Extensión para habilitar doble buffer en controles DataGridView de WinForms sin modificar CreateParams ni WndProc.
     /// </summary>
     public static class ControlExtensions
     {
@@ -642,3 +714,4 @@ namespace App_Contable.Presentacion
         }
     }
 }
+

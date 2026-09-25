@@ -275,7 +275,7 @@ namespace App_Contable.Presentacion
         private void btnKardex_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnKardex, "Tarjeta Kardex de Inventarios");
-            AbrirFormularioEnPanel(new frmKardex());
+            AbrirFormularioEnPanel(new frmInicioKardex());
         }
 
         private void btnBalanzaComprobacion_Click(object sender, EventArgs e)
