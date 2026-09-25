@@ -58,13 +58,6 @@ namespace App_Contable.Presentacion
             this.pnlToolbar.Size     = new System.Drawing.Size(1100, 72);
             this.pnlToolbar.TabIndex = 0;
 
-            this.pnlToolbar.Paint += (s, e) =>
-            {
-                using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(226, 232, 240));
-                e.Graphics.DrawLine(pen, 0, ((System.Windows.Forms.Panel)s!).Height - 1,
-                    ((System.Windows.Forms.Panel)s!).Width, ((System.Windows.Forms.Panel)s!).Height - 1);
-            };
-
             // ── lblTituloSeccion ──────────────────────────────────────────
             this.lblTituloSeccion.AutoSize  = true;
             this.lblTituloSeccion.Font      = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
@@ -233,12 +226,6 @@ namespace App_Contable.Presentacion
             this.pnlFooter.Padding  = new System.Windows.Forms.Padding(16, 10, 16, 10);
             this.pnlFooter.Size     = new System.Drawing.Size(1100, 48);
             this.pnlFooter.TabIndex = 2;
-
-            this.pnlFooter.Paint += (s, e) =>
-            {
-                using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(226, 232, 240));
-                e.Graphics.DrawLine(pen, 0, 0, ((System.Windows.Forms.Panel)s!).Width, 0);
-            };
 
             this.lblTotalCuentas.AutoSize  = true;
             this.lblTotalCuentas.Font      = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);

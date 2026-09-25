@@ -3,24 +3,41 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using App_Contable.Datos;
 using App_Contable.Logica;
+using App_Contable.Modelos;
 
 namespace App_Contable.Presentacion
 {
     public partial class frmMayorizacion : Form
     {
         private readonly MayorizacionServicio _servicio = new();
+        private readonly LibroDiarioStorageService _storageService = new();
         private List<FilaMayorTablaVisual> _filasActuales = new();
         private bool _cargandoCombo = false;
 
-        public frmMayorizacion()
+        /// <summary>
+        /// Instancia activa del Libro Diario que se está mayorizando.
+        /// </summary>
+        public LibroDiarioInstancia? LibroActivo { get; set; }
+
+        public frmMayorizacion(LibroDiarioInstancia? libroSeleccionado = null)
         {
             InitializeComponent();
+            LibroActivo = libroSeleccionado ?? _storageService.ObtenerLibros().FirstOrDefault() ?? new LibroDiarioInstancia
+            {
+                Id = "libro_general",
+                Nombre = "Libro Diario General",
+                Empresa = "Empresa Principal",
+                FechaInicio = new DateTime(DateTime.Today.Year, 1, 1),
+                FechaFin = new DateTime(DateTime.Today.Year, 12, 31),
+                Asientos = LibroDiarioServicio.Instancia.ObtenerAsientos().ToList()
+            };
+
             ConfigurarFormulario();
             this.Load += (s, e) =>
             {
-                CargarComboCuentas();
-                CargarDatos();
+                InicializarVistaLibro();
             };
             this.Shown += (s, e) => AjustarAnchoTarjetas();
             pnlCuentas.SizeChanged += (s, e) => AjustarAnchoTarjetas();
@@ -31,12 +48,7 @@ namespace App_Contable.Presentacion
             // Reducir parpadeos de pintado GDI+
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
 
-            // Fechas por defecto para el filtro (mes actual) igual que en Libro Diario
-            var hoy = DateTime.Today;
-            dtpDesde.Value = new DateTime(hoy.Year, hoy.Month, 1);
-            dtpHasta.Value = new DateTime(hoy.Year, hoy.Month, DateTime.DaysInMonth(hoy.Year, hoy.Month));
-
-            // Configuración avanzada de la grilla continua (idéntica a Libro Diario)
+            // Configuración de la grilla continua (idéntica a Libro Diario)
             dgvMayorizacion.AutoGenerateColumns = false;
             dgvMayorizacion.DoubleBuffered(true);
 
@@ -48,6 +60,42 @@ namespace App_Contable.Presentacion
 
             dgvMayorizacion.CellFormatting += DgvMayorizacion_CellFormatting;
             dgvMayorizacion.RowPrePaint += DgvMayorizacion_RowPrePaint;
+
+            pnlToolbar.Paint += (s, e) =>
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, pnlToolbar.Height - 1, pnlToolbar.Width, pnlToolbar.Height - 1);
+            };
+
+            pnlFooter.Paint += (s, e) =>
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, 0, pnlFooter.Width, 0);
+            };
+        }
+
+        private void InicializarVistaLibro()
+        {
+            if (LibroActivo != null)
+            {
+                lblTituloSeccion.Text = $"MAYORIZACIÓN — {LibroActivo.Nombre.ToUpperInvariant()}";
+                dtpDesde.Value = LibroActivo.FechaInicio;
+                dtpHasta.Value = LibroActivo.FechaFin;
+            }
+
+            CargarComboCuentas();
+            CargarDatos(dtpDesde.Value.Date, dtpHasta.Value.Date);
+        }
+
+        private void btnVolver_Click(object? sender, EventArgs e)
+        {
+            var nav = NavegacionHelper.ObtenerNavegacion(this);
+            if (nav != null)
+            {
+                nav.AbrirFormularioEnPanel(new frmInicioMayorizacion());
+                return;
+            }
+            this.Close();
         }
 
         private void CargarComboCuentas()
@@ -56,16 +104,19 @@ namespace App_Contable.Presentacion
             cmbCuentas.Items.Clear();
             cmbCuentas.Items.Add("Todas las Cuentas");
 
-            var todas = _servicio.GenerarMayor();
-            foreach (var c in todas)
+            if (LibroActivo != null)
             {
-                string nombre = string.IsNullOrWhiteSpace(c.NombreSubcuenta)
-                    ? c.NombreCuenta
-                    : $"{c.NombreCuenta} › {c.NombreSubcuenta}";
-
-                if (!cmbCuentas.Items.Contains(nombre))
+                var todas = _servicio.GenerarMayorDesdeLibro(LibroActivo);
+                foreach (var c in todas)
                 {
-                    cmbCuentas.Items.Add(nombre);
+                    string nombre = string.IsNullOrWhiteSpace(c.NombreSubcuenta)
+                        ? c.NombreCuenta
+                        : $"{c.NombreCuenta} › {c.NombreSubcuenta}";
+
+                    if (!cmbCuentas.Items.Contains(nombre))
+                    {
+                        cmbCuentas.Items.Add(nombre);
+                    }
                 }
             }
 
@@ -73,13 +124,37 @@ namespace App_Contable.Presentacion
             _cargandoCombo = false;
         }
 
+        /// <summary>
+        /// Procesa la mayorización automática desde el libro activo y renderiza ambas vistas.
+        /// </summary>
         private void CargarDatos(DateTime? desde = null, DateTime? hasta = null)
         {
+            if (LibroActivo != null)
+            {
+                GenerarMayorizacionDesdeLibro(LibroActivo, desde, hasta);
+            }
+        }
+
+        /// <summary>
+        /// Algoritmo de mayorización automática en memoria que procesa en cascada todos los asientos
+        /// del libro, calcula el saldo progresivo con LINQ y actualiza tanto la grilla como las tarjetas.
+        /// </summary>
+        /// <param name="libro">Instancia del Libro Diario a procesar.</param>
+        /// <param name="desde">Fecha inicial opcional para filtrado.</param>
+        /// <param name="hasta">Fecha final opcional para filtrado.</param>
+        public void GenerarMayorizacionDesdeLibro(LibroDiarioInstancia libro, DateTime? desde = null, DateTime? hasta = null)
+        {
+            if (libro == null) return;
+            LibroActivo = libro;
+
             string? filtroCuenta = cmbCuentas.SelectedItem?.ToString();
             if (filtroCuenta == "Todas las Cuentas") filtroCuenta = null;
 
+            DateTime? fechaDesde = desde ?? dtpDesde.Value.Date;
+            DateTime? fechaHasta = hasta ?? dtpHasta.Value.Date;
+
             // 1. Cargar Grilla Continua Principal (Estilo Libro Diario)
-            _filasActuales = _servicio.GenerarFilasVisualesTabla(desde, hasta, filtroCuenta);
+            _filasActuales = _servicio.GenerarFilasVisualesTablaDesdeLibro(libro, fechaDesde, fechaHasta, filtroCuenta);
             dgvMayorizacion.Rows.Clear();
 
             foreach (var fila in _filasActuales)
@@ -97,15 +172,17 @@ namespace App_Contable.Presentacion
                 dgvMayorizacion.Rows[index].Tag = fila;
             }
 
-            // 2. Cargar Vista Secundaria de Tarjetas
-            CargarTarjetasCuentas(desde, hasta, filtroCuenta);
+            // 2. Cargar Vista Secundaria de Tarjetas T
+            CargarTarjetasCuentas(libro, fechaDesde, fechaHasta, filtroCuenta);
 
             // 3. Actualizar totales del footer
-            var cuentasMayor = _servicio.GenerarMayor(desde, hasta);
+            var cuentasMayor = _servicio.GenerarMayorDesdeLibro(libro, fechaDesde, fechaHasta);
             if (!string.IsNullOrWhiteSpace(filtroCuenta))
             {
                 cuentasMayor = cuentasMayor.Where(c => c.NombreCuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase) ||
-                                                       (!string.IsNullOrEmpty(c.NombreSubcuenta) && c.NombreSubcuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase)))
+                                                       (!string.IsNullOrEmpty(c.NombreSubcuenta) && c.NombreSubcuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase)) ||
+                                                       c.ClaveAgrupacion.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase) ||
+                                                       $"{c.NombreCuenta} › {c.NombreSubcuenta}".Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase))
                                            .ToList();
             }
             ActualizarResumen(cuentasMayor);
@@ -122,7 +199,7 @@ namespace App_Contable.Presentacion
             {
                 case TipoFilaMayorVisual.EncabezadoCuenta:
                     // Idéntico a EncabezadoPartida del Libro Diario
-                    row.DefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249); // Gris azulado suave
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
                     row.DefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(30, 41, 59);
                     break;
@@ -172,13 +249,15 @@ namespace App_Contable.Presentacion
             }
         }
 
-        private void CargarTarjetasCuentas(DateTime? desde, DateTime? hasta, string? filtroCuenta)
+        private void CargarTarjetasCuentas(LibroDiarioInstancia libro, DateTime? desde, DateTime? hasta, string? filtroCuenta)
         {
-            var cuentas = _servicio.GenerarMayor(desde, hasta);
+            var cuentas = _servicio.GenerarMayorDesdeLibro(libro, desde, hasta);
             if (!string.IsNullOrWhiteSpace(filtroCuenta))
             {
                 cuentas = cuentas.Where(c => c.NombreCuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase) ||
-                                             (!string.IsNullOrEmpty(c.NombreSubcuenta) && c.NombreSubcuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase)))
+                                             (!string.IsNullOrEmpty(c.NombreSubcuenta) && c.NombreSubcuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase)) ||
+                                             c.ClaveAgrupacion.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase) ||
+                                             $"{c.NombreCuenta} › {c.NombreSubcuenta}".Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase))
                                  .ToList();
             }
 
@@ -189,7 +268,7 @@ namespace App_Contable.Presentacion
             {
                 var lbl = new Label
                 {
-                    Text = "No hay asientos registrados en el Libro Diario para generar la Mayorización.",
+                    Text = "No hay asientos registrados en este Libro Diario para generar la Mayorización.",
                     ForeColor = Color.FromArgb(100, 116, 139),
                     Font = new Font("Segoe UI", 11f, FontStyle.Italic),
                     AutoSize = false,
@@ -455,9 +534,15 @@ namespace App_Contable.Presentacion
             CargarDatos(dtpDesde.Value.Date, dtpHasta.Value.Date);
         }
 
-        private void btnRefrescar_Click(object sender, EventArgs e)
+        private void btnRefrescar_Click(object? sender, EventArgs e)
         {
-            CargarDatos();
+            if (LibroActivo != null)
+            {
+                var actualizado = _storageService.ObtenerLibroPorId(LibroActivo.Id);
+                if (actualizado != null) LibroActivo = actualizado;
+            }
+            CargarComboCuentas();
+            CargarDatos(dtpDesde.Value.Date, dtpHasta.Value.Date);
         }
 
         private void btnFiltrar_Click(object sender, EventArgs e)

@@ -270,6 +270,18 @@ namespace App_Contable.Presentacion
             btnEliminar.Click += (s, e) => EliminarCuenta();
 
             txtBuscar.TextChanged += (s, e) => FiltrarCatalogo();
+
+            pnlToolbar.Paint += (s, e) =>
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, pnlToolbar.Height - 1, pnlToolbar.Width, pnlToolbar.Height - 1);
+            };
+
+            pnlFooter.Paint += (s, e) =>
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, 0, pnlFooter.Width, 0);
+            };
         }
 
         private void AplicarEstiloGrilla()

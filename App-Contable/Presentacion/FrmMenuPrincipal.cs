@@ -7,7 +7,7 @@ using App_Contable.Datos;
 
 namespace App_Contable.Presentacion
 {
-    public partial class FrmMenuPrincipal : Form
+    public partial class FrmMenuPrincipal : Form, INavegacionPrincipal
     {
         private Form? _formularioActivo = null;
         private Button? _botonSeleccionado = null;
@@ -257,7 +257,7 @@ namespace App_Contable.Presentacion
         private void btnLibroMayor_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnLibroMayor, "Mayorización");
-            AbrirFormularioEnPanel(new frmMayorizacion());
+            AbrirFormularioEnPanel(new frmInicioMayorizacion());
         }
 
         private void btnBalanceGeneral_Click(object sender, EventArgs e)

@@ -14,609 +14,715 @@ namespace App_Contable.Presentacion
 
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle cs1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle cs2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle cs3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle cs4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle cs5 = new System.Windows.Forms.DataGridViewCellStyle();
-
-            // ── Controls ──────────────────────────────────────────────
-            this.pnlToolbar          = new System.Windows.Forms.Panel();
-            this.lblTituloSeccion    = new System.Windows.Forms.Label();
-            this.pnlFiltroFechas     = new System.Windows.Forms.Panel();
-            this.lblPeriodo          = new System.Windows.Forms.Label();
-            this.dtpFechaInicio      = new System.Windows.Forms.DateTimePicker();
-            this.lblFlechaRango      = new System.Windows.Forms.Label();
-            this.dtpFechaFin         = new System.Windows.Forms.DateTimePicker();
-            this.btnFiltrar          = new System.Windows.Forms.Button();
-            this.btnNuevoAsiento     = new System.Windows.Forms.Button();
-            this.btnEliminarAsiento  = new System.Windows.Forms.Button();
-            this.btnEditarAsiento    = new System.Windows.Forms.Button();
-            this.btnCargarEjemplo    = new System.Windows.Forms.Button();
-            this.btnBajarAsiento     = new System.Windows.Forms.Button();
-            this.btnSubirAsiento     = new System.Windows.Forms.Button();
-            this.btnActualizar       = new System.Windows.Forms.Button();
-            this.btnVolverDashboard  = new System.Windows.Forms.Button();
-            // Dashboard panel
-            this.pnlDashboard        = new System.Windows.Forms.Panel();
-            this.pnlDashHeader       = new System.Windows.Forms.Panel();
-            this.lblDashTitulo       = new System.Windows.Forms.Label();
-            this.lblDashSubtitulo    = new System.Windows.Forms.Label();
-            this.lblBadgeTotal       = new System.Windows.Forms.Label();
-            this.pnlDashContent      = new System.Windows.Forms.Panel();
-            this.pnlListaAsientos    = new System.Windows.Forms.Panel();
-            this.lblListaHeader      = new System.Windows.Forms.Label();
-            this.txtBuscarDash       = new System.Windows.Forms.TextBox();
-            this.lstAsientos         = new App_Contable.Presentacion.AsientoListBox();
-            this.pnlAcciones         = new System.Windows.Forms.Panel();
-            this.lblAccionesHeader   = new System.Windows.Forms.Label();
-            this.btnDashNuevo        = new System.Windows.Forms.Button();
-            this.btnDashEjemplo      = new System.Windows.Forms.Button();
-            this.btnDashVerLibro     = new System.Windows.Forms.Button();
-            this.btnDashLimpiar      = new System.Windows.Forms.Button();
-            // Grilla
-            this.pnlGrillaContenedor = new System.Windows.Forms.Panel();
-            this.dgvLibroDiario      = new System.Windows.Forms.DataGridView();
-            this.colFecha            = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colCuenta           = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colParcial          = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDebe             = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colHaber            = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            // Footer
-            this.pnlResumenInferior  = new System.Windows.Forms.Panel();
-            this.lblBadgeEstado      = new System.Windows.Forms.Label();
-            this.lblTotalHaberGlobal = new System.Windows.Forms.Label();
-            this.lblTotalDebeGlobal  = new System.Windows.Forms.Label();
-            this.lblTotalAsientos    = new System.Windows.Forms.Label();
-
-            this.pnlToolbar.SuspendLayout();
-            this.pnlFiltroFechas.SuspendLayout();
-            this.pnlDashboard.SuspendLayout();
-            this.pnlDashHeader.SuspendLayout();
-            this.pnlDashContent.SuspendLayout();
-            this.pnlListaAsientos.SuspendLayout();
-            this.pnlAcciones.SuspendLayout();
-            this.pnlGrillaContenedor.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLibroDiario)).BeginInit();
-            this.pnlResumenInferior.SuspendLayout();
-            this.SuspendLayout();
-
-            // ══ pnlToolbar ════════════════════════════════════════════
-            this.pnlToolbar.BackColor = System.Drawing.Color.White;
-            this.pnlToolbar.Controls.Add(this.btnSubirAsiento);
-            this.pnlToolbar.Controls.Add(this.btnBajarAsiento);
-            this.pnlToolbar.Controls.Add(this.btnEditarAsiento);
-            this.pnlToolbar.Controls.Add(this.btnActualizar);
-            this.pnlToolbar.Controls.Add(this.btnCargarEjemplo);
-            this.pnlToolbar.Controls.Add(this.btnEliminarAsiento);
-            this.pnlToolbar.Controls.Add(this.btnNuevoAsiento);
-            this.pnlToolbar.Controls.Add(this.btnVolverDashboard);
-            this.pnlToolbar.Controls.Add(this.pnlFiltroFechas);
-            this.pnlToolbar.Controls.Add(this.lblTituloSeccion);
-            this.pnlToolbar.Dock     = System.Windows.Forms.DockStyle.Top;
-            this.pnlToolbar.Name     = "pnlToolbar";
-            this.pnlToolbar.Padding  = new System.Windows.Forms.Padding(16, 12, 16, 12);
-            this.pnlToolbar.Size     = new System.Drawing.Size(1100, 72);
-            this.pnlToolbar.TabIndex = 0;
-            this.pnlToolbar.Paint += (s, e) =>
-            {
-                using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(226, 232, 240));
-                e.Graphics.DrawLine(pen, 0, ((System.Windows.Forms.Panel)s!).Height - 1,
-                    ((System.Windows.Forms.Panel)s!).Width, ((System.Windows.Forms.Panel)s!).Height - 1);
-            };
-
-            // lblTituloSeccion
-            this.lblTituloSeccion.AutoSize  = true;
-            this.lblTituloSeccion.Font      = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTituloSeccion.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.lblTituloSeccion.Location  = new System.Drawing.Point(16, 24);
-            this.lblTituloSeccion.Name      = "lblTituloSeccion";
-            this.lblTituloSeccion.Text      = "LIBRO DIARIO";
-
-            // pnlFiltroFechas
-            this.pnlFiltroFechas.Controls.Add(this.btnFiltrar);
-            this.pnlFiltroFechas.Controls.Add(this.dtpFechaFin);
-            this.pnlFiltroFechas.Controls.Add(this.lblFlechaRango);
-            this.pnlFiltroFechas.Controls.Add(this.dtpFechaInicio);
-            this.pnlFiltroFechas.Controls.Add(this.lblPeriodo);
-            this.pnlFiltroFechas.Location = new System.Drawing.Point(160, 16);
-            this.pnlFiltroFechas.Name     = "pnlFiltroFechas";
-            this.pnlFiltroFechas.Size     = new System.Drawing.Size(370, 38);
-
-            this.lblPeriodo.AutoSize  = true;
-            this.lblPeriodo.Font      = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblPeriodo.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
-            this.lblPeriodo.Location  = new System.Drawing.Point(3, 11);
-            this.lblPeriodo.Text      = "Período:";
-
-            this.dtpFechaInicio.Font     = new System.Drawing.Font("Segoe UI", 9F);
-            this.dtpFechaInicio.Format   = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpFechaInicio.Location = new System.Drawing.Point(58, 8);
-            this.dtpFechaInicio.Size     = new System.Drawing.Size(100, 23);
-            this.dtpFechaInicio.Name     = "dtpFechaInicio";
-
-            this.lblFlechaRango.AutoSize  = true;
-            this.lblFlechaRango.ForeColor = System.Drawing.Color.FromArgb(148, 163, 184);
-            this.lblFlechaRango.Location  = new System.Drawing.Point(164, 11);
-            this.lblFlechaRango.Text      = "—";
-
-            this.dtpFechaFin.Font     = new System.Drawing.Font("Segoe UI", 9F);
-            this.dtpFechaFin.Format   = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpFechaFin.Location = new System.Drawing.Point(182, 8);
-            this.dtpFechaFin.Size     = new System.Drawing.Size(100, 23);
-            this.dtpFechaFin.Name     = "dtpFechaFin";
-
-            this.btnFiltrar.BackColor                 = System.Drawing.Color.FromArgb(241, 245, 249);
-            this.btnFiltrar.Cursor                    = System.Windows.Forms.Cursors.Hand;
-            this.btnFiltrar.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnFiltrar.FlatStyle                 = System.Windows.Forms.FlatStyle.Flat;
-            this.btnFiltrar.Font                      = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.btnFiltrar.ForeColor                 = System.Drawing.Color.FromArgb(51, 65, 85);
-            this.btnFiltrar.Location                  = new System.Drawing.Point(290, 7);
-            this.btnFiltrar.Name                      = "btnFiltrar";
-            this.btnFiltrar.Size                      = new System.Drawing.Size(70, 25);
-            this.btnFiltrar.Text                      = "Filtrar";
-            this.btnFiltrar.UseVisualStyleBackColor   = false;
-
-            // btnVolverDashboard (solo en vista grilla)
-            this.btnVolverDashboard.Anchor                           = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnVolverDashboard.BackColor                        = System.Drawing.Color.FromArgb(241, 245, 249);
-            this.btnVolverDashboard.Cursor                           = System.Windows.Forms.Cursors.Hand;
-            this.btnVolverDashboard.FlatAppearance.BorderColor       = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnVolverDashboard.FlatStyle                        = System.Windows.Forms.FlatStyle.Flat;
-            this.btnVolverDashboard.Font                             = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnVolverDashboard.ForeColor                        = System.Drawing.Color.FromArgb(71, 85, 105);
-            this.btnVolverDashboard.Location                         = new System.Drawing.Point(440, 18);
-            this.btnVolverDashboard.Name                             = "btnVolverDashboard";
-            this.btnVolverDashboard.Size                             = new System.Drawing.Size(100, 36);
-            this.btnVolverDashboard.Text                             = "← Inicio";
-            this.btnVolverDashboard.UseVisualStyleBackColor          = false;
-            this.btnVolverDashboard.Visible                          = false;
-
-            // btnNuevoAsiento
-            this.btnNuevoAsiento.Anchor                          = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnNuevoAsiento.BackColor                       = System.Drawing.Color.FromArgb(37, 99, 235);
-            this.btnNuevoAsiento.Cursor                          = System.Windows.Forms.Cursors.Hand;
-            this.btnNuevoAsiento.FlatAppearance.BorderSize       = 0;
-            this.btnNuevoAsiento.FlatStyle                       = System.Windows.Forms.FlatStyle.Flat;
-            this.btnNuevoAsiento.Font                            = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.btnNuevoAsiento.ForeColor                       = System.Drawing.Color.White;
-            this.btnNuevoAsiento.Location                        = new System.Drawing.Point(965, 18);
-            this.btnNuevoAsiento.Name                            = "btnNuevoAsiento";
-            this.btnNuevoAsiento.Size                            = new System.Drawing.Size(115, 36);
-            this.btnNuevoAsiento.Text                            = "➕ Nuevo";
-            this.btnNuevoAsiento.UseVisualStyleBackColor         = false;
-
-            // btnEliminarAsiento
-            this.btnEliminarAsiento.Anchor                           = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnEliminarAsiento.BackColor                        = System.Drawing.Color.White;
-            this.btnEliminarAsiento.Cursor                           = System.Windows.Forms.Cursors.Hand;
-            this.btnEliminarAsiento.FlatAppearance.BorderColor       = System.Drawing.Color.FromArgb(239, 68, 68);
-            this.btnEliminarAsiento.FlatStyle                        = System.Windows.Forms.FlatStyle.Flat;
-            this.btnEliminarAsiento.Font                             = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnEliminarAsiento.ForeColor                        = System.Drawing.Color.FromArgb(220, 38, 38);
-            this.btnEliminarAsiento.Location                         = new System.Drawing.Point(860, 18);
-            this.btnEliminarAsiento.Name                             = "btnEliminarAsiento";
-            this.btnEliminarAsiento.Size                             = new System.Drawing.Size(100, 36);
-            this.btnEliminarAsiento.Text                             = "🗑️ Eliminar";
-            this.btnEliminarAsiento.UseVisualStyleBackColor          = false;
-            this.btnEliminarAsiento.Visible                          = false;
-
-            // btnEditarAsiento
-            this.btnEditarAsiento.Anchor                           = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnEditarAsiento.BackColor                        = System.Drawing.Color.White;
-            this.btnEditarAsiento.Cursor                           = System.Windows.Forms.Cursors.Hand;
-            this.btnEditarAsiento.FlatAppearance.BorderColor       = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnEditarAsiento.FlatStyle                        = System.Windows.Forms.FlatStyle.Flat;
-            this.btnEditarAsiento.Font                             = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnEditarAsiento.ForeColor                        = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.btnEditarAsiento.Location                         = new System.Drawing.Point(755, 18);
-            this.btnEditarAsiento.Name                             = "btnEditarAsiento";
-            this.btnEditarAsiento.Size                             = new System.Drawing.Size(100, 36);
-            this.btnEditarAsiento.Text                             = "✏️ Editar";
-            this.btnEditarAsiento.UseVisualStyleBackColor          = false;
-            this.btnEditarAsiento.Visible                          = false;
-
-            // btnBajarAsiento
-            this.btnBajarAsiento.Anchor                           = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnBajarAsiento.BackColor                        = System.Drawing.Color.White;
-            this.btnBajarAsiento.Cursor                           = System.Windows.Forms.Cursors.Hand;
-            this.btnBajarAsiento.FlatAppearance.BorderColor       = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnBajarAsiento.FlatStyle                        = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBajarAsiento.Font                             = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnBajarAsiento.ForeColor                        = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.btnBajarAsiento.Location                         = new System.Drawing.Point(705, 18);
-            this.btnBajarAsiento.Name                             = "btnBajarAsiento";
-            this.btnBajarAsiento.Size                             = new System.Drawing.Size(45, 36);
-            this.btnBajarAsiento.Text                             = "⬇️";
-            this.btnBajarAsiento.UseVisualStyleBackColor          = false;
-            this.btnBajarAsiento.Visible                          = false;
-
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            pnlToolbar = new Panel();
+            btnSubirAsiento = new Button();
+            btnBajarAsiento = new Button();
+            btnEditarAsiento = new Button();
+            btnActualizar = new Button();
+            btnCargarEjemplo = new Button();
+            btnEliminarAsiento = new Button();
+            btnNuevoAsiento = new Button();
+            btnVolverDashboard = new Button();
+            pnlFiltroFechas = new Panel();
+            btnFiltrar = new Button();
+            dtpFechaFin = new DateTimePicker();
+            lblFlechaRango = new Label();
+            dtpFechaInicio = new DateTimePicker();
+            lblPeriodo = new Label();
+            lblTituloSeccion = new Label();
+            pnlDashboard = new Panel();
+            pnlDashContent = new Panel();
+            pnlAcciones = new Panel();
+            btnDashEliminar = new Button();
+            btnDashGuardarBD = new Button();
+            btnDashNuevo = new Button();
+            lblAccionesHeader = new Label();
+            pnlListaAsientos = new Panel();
+            lstLibros = new LibroDiarioInstanciaListBox();
+            txtBuscarDash = new TextBox();
+            lblListaHeader = new Label();
+            pnlDashHeader = new Panel();
+            lblBadgeTotal = new Label();
+            lblDashSubtitulo = new Label();
+            lblDashTitulo = new Label();
+            pnlGrillaContenedor = new Panel();
+            dgvLibroDiario = new DataGridView();
+            colFecha = new DataGridViewTextBoxColumn();
+            colCuenta = new DataGridViewTextBoxColumn();
+            colParcial = new DataGridViewTextBoxColumn();
+            colDebe = new DataGridViewTextBoxColumn();
+            colHaber = new DataGridViewTextBoxColumn();
+            pnlResumenInferior = new Panel();
+            lblBadgeEstado = new Label();
+            lblTotalHaberGlobal = new Label();
+            lblTotalDebeGlobal = new Label();
+            lblTotalAsientos = new Label();
+            pnlToolbar.SuspendLayout();
+            pnlFiltroFechas.SuspendLayout();
+            pnlDashboard.SuspendLayout();
+            pnlDashContent.SuspendLayout();
+            pnlAcciones.SuspendLayout();
+            pnlListaAsientos.SuspendLayout();
+            pnlDashHeader.SuspendLayout();
+            pnlGrillaContenedor.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvLibroDiario).BeginInit();
+            pnlResumenInferior.SuspendLayout();
+            SuspendLayout();
+            // 
+            // pnlToolbar
+            // 
+            pnlToolbar.BackColor = Color.White;
+            pnlToolbar.Controls.Add(btnSubirAsiento);
+            pnlToolbar.Controls.Add(btnBajarAsiento);
+            pnlToolbar.Controls.Add(btnEditarAsiento);
+            pnlToolbar.Controls.Add(btnActualizar);
+            pnlToolbar.Controls.Add(btnCargarEjemplo);
+            pnlToolbar.Controls.Add(btnEliminarAsiento);
+            pnlToolbar.Controls.Add(btnNuevoAsiento);
+            pnlToolbar.Controls.Add(btnVolverDashboard);
+            pnlToolbar.Controls.Add(pnlFiltroFechas);
+            pnlToolbar.Controls.Add(lblTituloSeccion);
+            pnlToolbar.Dock = DockStyle.Top;
+            pnlToolbar.Location = new Point(0, 0);
+            pnlToolbar.Margin = new Padding(3, 4, 3, 4);
+            pnlToolbar.Name = "pnlToolbar";
+            pnlToolbar.Padding = new Padding(18, 16, 18, 16);
+            pnlToolbar.Size = new Size(1257, 96);
+            pnlToolbar.TabIndex = 0;
+            // 
             // btnSubirAsiento
-            this.btnSubirAsiento.Anchor                           = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnSubirAsiento.BackColor                        = System.Drawing.Color.White;
-            this.btnSubirAsiento.Cursor                           = System.Windows.Forms.Cursors.Hand;
-            this.btnSubirAsiento.FlatAppearance.BorderColor       = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnSubirAsiento.FlatStyle                        = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSubirAsiento.Font                             = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnSubirAsiento.ForeColor                        = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.btnSubirAsiento.Location                         = new System.Drawing.Point(655, 18);
-            this.btnSubirAsiento.Name                             = "btnSubirAsiento";
-            this.btnSubirAsiento.Size                             = new System.Drawing.Size(45, 36);
-            this.btnSubirAsiento.Text                             = "⬆️";
-            this.btnSubirAsiento.UseVisualStyleBackColor          = false;
-            this.btnSubirAsiento.Visible                          = false;
-
-            // btnCargarEjemplo
-            this.btnCargarEjemplo.Anchor                           = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnCargarEjemplo.BackColor                        = System.Drawing.Color.White;
-            this.btnCargarEjemplo.Cursor                           = System.Windows.Forms.Cursors.Hand;
-            this.btnCargarEjemplo.FlatAppearance.BorderColor       = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnCargarEjemplo.FlatStyle                        = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCargarEjemplo.Font                             = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCargarEjemplo.ForeColor                        = System.Drawing.Color.FromArgb(71, 85, 105);
-            this.btnCargarEjemplo.Location                         = new System.Drawing.Point(545, 18);
-            this.btnCargarEjemplo.Name                             = "btnCargarEjemplo";
-            this.btnCargarEjemplo.Size                             = new System.Drawing.Size(105, 36);
-            this.btnCargarEjemplo.Text                             = "📥 Ejemplo";
-            this.btnCargarEjemplo.UseVisualStyleBackColor          = false;
-            this.btnCargarEjemplo.Visible                          = false;
-
+            // 
+            btnSubirAsiento.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnSubirAsiento.BackColor = Color.White;
+            btnSubirAsiento.Cursor = Cursors.Hand;
+            btnSubirAsiento.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnSubirAsiento.FlatStyle = FlatStyle.Flat;
+            btnSubirAsiento.Font = new Font("Segoe UI", 9F);
+            btnSubirAsiento.ForeColor = Color.FromArgb(30, 41, 59);
+            btnSubirAsiento.Location = new Point(749, 24);
+            btnSubirAsiento.Margin = new Padding(3, 4, 3, 4);
+            btnSubirAsiento.Name = "btnSubirAsiento";
+            btnSubirAsiento.Size = new Size(51, 48);
+            btnSubirAsiento.TabIndex = 0;
+            btnSubirAsiento.Text = "⬆️";
+            btnSubirAsiento.UseVisualStyleBackColor = false;
+            btnSubirAsiento.Visible = false;
+            // 
+            // btnBajarAsiento
+            // 
+            btnBajarAsiento.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBajarAsiento.BackColor = Color.White;
+            btnBajarAsiento.Cursor = Cursors.Hand;
+            btnBajarAsiento.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnBajarAsiento.FlatStyle = FlatStyle.Flat;
+            btnBajarAsiento.Font = new Font("Segoe UI", 9F);
+            btnBajarAsiento.ForeColor = Color.FromArgb(30, 41, 59);
+            btnBajarAsiento.Location = new Point(806, 24);
+            btnBajarAsiento.Margin = new Padding(3, 4, 3, 4);
+            btnBajarAsiento.Name = "btnBajarAsiento";
+            btnBajarAsiento.Size = new Size(51, 48);
+            btnBajarAsiento.TabIndex = 1;
+            btnBajarAsiento.Text = "⬇️";
+            btnBajarAsiento.UseVisualStyleBackColor = false;
+            btnBajarAsiento.Visible = false;
+            // 
+            // btnEditarAsiento
+            // 
+            btnEditarAsiento.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnEditarAsiento.BackColor = Color.White;
+            btnEditarAsiento.Cursor = Cursors.Hand;
+            btnEditarAsiento.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnEditarAsiento.FlatStyle = FlatStyle.Flat;
+            btnEditarAsiento.Font = new Font("Segoe UI", 9F);
+            btnEditarAsiento.ForeColor = Color.FromArgb(30, 41, 59);
+            btnEditarAsiento.Location = new Point(863, 24);
+            btnEditarAsiento.Margin = new Padding(3, 4, 3, 4);
+            btnEditarAsiento.Name = "btnEditarAsiento";
+            btnEditarAsiento.Size = new Size(114, 48);
+            btnEditarAsiento.TabIndex = 2;
+            btnEditarAsiento.Text = "✏️ Editar";
+            btnEditarAsiento.UseVisualStyleBackColor = false;
+            btnEditarAsiento.Visible = false;
+            // 
             // btnActualizar
-            this.btnActualizar.Anchor                           = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnActualizar.BackColor                        = System.Drawing.Color.White;
-            this.btnActualizar.Cursor                           = System.Windows.Forms.Cursors.Hand;
-            this.btnActualizar.FlatAppearance.BorderColor       = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnActualizar.FlatStyle                        = System.Windows.Forms.FlatStyle.Flat;
-            this.btnActualizar.Font                             = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnActualizar.ForeColor                        = System.Drawing.Color.FromArgb(71, 85, 105);
-            this.btnActualizar.Location                         = new System.Drawing.Point(545, 18);
-            this.btnActualizar.Name                             = "btnActualizar";
-            this.btnActualizar.Size                             = new System.Drawing.Size(95, 36);
-            this.btnActualizar.Text                             = "🔄 Refrescar";
-            this.btnActualizar.UseVisualStyleBackColor          = false;
-            this.btnActualizar.Visible                          = false;
-
-            // ══ pnlDashboard ══════════════════════════════════════════
-            this.pnlDashboard.BackColor = System.Drawing.Color.FromArgb(248, 250, 252);
-            this.pnlDashboard.Controls.Add(this.pnlDashContent);
-            this.pnlDashboard.Controls.Add(this.pnlDashHeader);
-            this.pnlDashboard.Dock     = System.Windows.Forms.DockStyle.Fill;
-            this.pnlDashboard.Name     = "pnlDashboard";
-
+            // 
+            btnActualizar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnActualizar.BackColor = Color.White;
+            btnActualizar.Cursor = Cursors.Hand;
+            btnActualizar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnActualizar.FlatStyle = FlatStyle.Flat;
+            btnActualizar.Font = new Font("Segoe UI", 9F);
+            btnActualizar.ForeColor = Color.FromArgb(71, 85, 105);
+            btnActualizar.Location = new Point(623, 24);
+            btnActualizar.Margin = new Padding(3, 4, 3, 4);
+            btnActualizar.Name = "btnActualizar";
+            btnActualizar.Size = new Size(109, 48);
+            btnActualizar.TabIndex = 3;
+            btnActualizar.Text = "🔄 Refrescar";
+            btnActualizar.UseVisualStyleBackColor = false;
+            btnActualizar.Visible = false;
+            // 
+            // btnCargarEjemplo
+            // 
+            btnCargarEjemplo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCargarEjemplo.BackColor = Color.White;
+            btnCargarEjemplo.Cursor = Cursors.Hand;
+            btnCargarEjemplo.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnCargarEjemplo.FlatStyle = FlatStyle.Flat;
+            btnCargarEjemplo.Font = new Font("Segoe UI", 9F);
+            btnCargarEjemplo.ForeColor = Color.FromArgb(71, 85, 105);
+            btnCargarEjemplo.Location = new Point(623, 24);
+            btnCargarEjemplo.Margin = new Padding(3, 4, 3, 4);
+            btnCargarEjemplo.Name = "btnCargarEjemplo";
+            btnCargarEjemplo.Size = new Size(120, 48);
+            btnCargarEjemplo.TabIndex = 4;
+            btnCargarEjemplo.Text = "📥 Ejemplo";
+            btnCargarEjemplo.UseVisualStyleBackColor = false;
+            btnCargarEjemplo.Visible = false;
+            // 
+            // btnEliminarAsiento
+            // 
+            btnEliminarAsiento.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnEliminarAsiento.BackColor = Color.White;
+            btnEliminarAsiento.Cursor = Cursors.Hand;
+            btnEliminarAsiento.FlatAppearance.BorderColor = Color.FromArgb(239, 68, 68);
+            btnEliminarAsiento.FlatStyle = FlatStyle.Flat;
+            btnEliminarAsiento.Font = new Font("Segoe UI", 9F);
+            btnEliminarAsiento.ForeColor = Color.FromArgb(220, 38, 38);
+            btnEliminarAsiento.Location = new Point(983, 24);
+            btnEliminarAsiento.Margin = new Padding(3, 4, 3, 4);
+            btnEliminarAsiento.Name = "btnEliminarAsiento";
+            btnEliminarAsiento.Size = new Size(114, 48);
+            btnEliminarAsiento.TabIndex = 5;
+            btnEliminarAsiento.Text = "🗑️ Eliminar";
+            btnEliminarAsiento.UseVisualStyleBackColor = false;
+            btnEliminarAsiento.Visible = false;
+            // 
+            // btnNuevoAsiento
+            // 
+            btnNuevoAsiento.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnNuevoAsiento.BackColor = Color.FromArgb(37, 99, 235);
+            btnNuevoAsiento.Cursor = Cursors.Hand;
+            btnNuevoAsiento.FlatAppearance.BorderSize = 0;
+            btnNuevoAsiento.FlatStyle = FlatStyle.Flat;
+            btnNuevoAsiento.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnNuevoAsiento.ForeColor = Color.White;
+            btnNuevoAsiento.Location = new Point(1103, 24);
+            btnNuevoAsiento.Margin = new Padding(3, 4, 3, 4);
+            btnNuevoAsiento.Name = "btnNuevoAsiento";
+            btnNuevoAsiento.Size = new Size(131, 48);
+            btnNuevoAsiento.TabIndex = 6;
+            btnNuevoAsiento.Text = "➕ Nuevo";
+            btnNuevoAsiento.UseVisualStyleBackColor = false;
+            // 
+            // btnVolverDashboard
+            // 
+            btnVolverDashboard.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnVolverDashboard.BackColor = Color.FromArgb(241, 245, 249);
+            btnVolverDashboard.Cursor = Cursors.Hand;
+            btnVolverDashboard.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnVolverDashboard.FlatStyle = FlatStyle.Flat;
+            btnVolverDashboard.Font = new Font("Segoe UI", 9F);
+            btnVolverDashboard.ForeColor = Color.FromArgb(71, 85, 105);
+            btnVolverDashboard.Location = new Point(503, 24);
+            btnVolverDashboard.Margin = new Padding(3, 4, 3, 4);
+            btnVolverDashboard.Name = "btnVolverDashboard";
+            btnVolverDashboard.Size = new Size(114, 48);
+            btnVolverDashboard.TabIndex = 7;
+            btnVolverDashboard.Text = "← Inicio";
+            btnVolverDashboard.UseVisualStyleBackColor = false;
+            btnVolverDashboard.Visible = false;
+            // 
+            // pnlFiltroFechas
+            // 
+            pnlFiltroFechas.Controls.Add(btnFiltrar);
+            pnlFiltroFechas.Controls.Add(dtpFechaFin);
+            pnlFiltroFechas.Controls.Add(lblFlechaRango);
+            pnlFiltroFechas.Controls.Add(dtpFechaInicio);
+            pnlFiltroFechas.Controls.Add(lblPeriodo);
+            pnlFiltroFechas.Location = new Point(183, 21);
+            pnlFiltroFechas.Margin = new Padding(3, 4, 3, 4);
+            pnlFiltroFechas.Name = "pnlFiltroFechas";
+            pnlFiltroFechas.Size = new Size(423, 51);
+            pnlFiltroFechas.TabIndex = 8;
+            // 
+            // btnFiltrar
+            // 
+            btnFiltrar.BackColor = Color.FromArgb(241, 245, 249);
+            btnFiltrar.Cursor = Cursors.Hand;
+            btnFiltrar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnFiltrar.FlatStyle = FlatStyle.Flat;
+            btnFiltrar.Font = new Font("Segoe UI", 8.5F);
+            btnFiltrar.ForeColor = Color.FromArgb(51, 65, 85);
+            btnFiltrar.Location = new Point(331, 9);
+            btnFiltrar.Margin = new Padding(3, 4, 3, 4);
+            btnFiltrar.Name = "btnFiltrar";
+            btnFiltrar.Size = new Size(80, 33);
+            btnFiltrar.TabIndex = 0;
+            btnFiltrar.Text = "Filtrar";
+            btnFiltrar.UseVisualStyleBackColor = false;
+            // 
+            // dtpFechaFin
+            // 
+            dtpFechaFin.Font = new Font("Segoe UI", 9F);
+            dtpFechaFin.Format = DateTimePickerFormat.Short;
+            dtpFechaFin.Location = new Point(208, 11);
+            dtpFechaFin.Margin = new Padding(3, 4, 3, 4);
+            dtpFechaFin.Name = "dtpFechaFin";
+            dtpFechaFin.Size = new Size(114, 27);
+            dtpFechaFin.TabIndex = 1;
+            // 
+            // lblFlechaRango
+            // 
+            lblFlechaRango.AutoSize = true;
+            lblFlechaRango.ForeColor = Color.FromArgb(148, 163, 184);
+            lblFlechaRango.Location = new Point(187, 15);
+            lblFlechaRango.Name = "lblFlechaRango";
+            lblFlechaRango.Size = new Size(24, 20);
+            lblFlechaRango.TabIndex = 2;
+            lblFlechaRango.Text = "—";
+            // 
+            // dtpFechaInicio
+            // 
+            dtpFechaInicio.Font = new Font("Segoe UI", 9F);
+            dtpFechaInicio.Format = DateTimePickerFormat.Short;
+            dtpFechaInicio.Location = new Point(66, 11);
+            dtpFechaInicio.Margin = new Padding(3, 4, 3, 4);
+            dtpFechaInicio.Name = "dtpFechaInicio";
+            dtpFechaInicio.Size = new Size(114, 27);
+            dtpFechaInicio.TabIndex = 3;
+            // 
+            // lblPeriodo
+            // 
+            lblPeriodo.AutoSize = true;
+            lblPeriodo.Font = new Font("Segoe UI", 9F);
+            lblPeriodo.ForeColor = Color.FromArgb(71, 85, 105);
+            lblPeriodo.Location = new Point(3, 15);
+            lblPeriodo.Name = "lblPeriodo";
+            lblPeriodo.Size = new Size(63, 20);
+            lblPeriodo.TabIndex = 4;
+            lblPeriodo.Text = "Período:";
+            // 
+            // lblTituloSeccion
+            // 
+            lblTituloSeccion.AutoSize = true;
+            lblTituloSeccion.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblTituloSeccion.ForeColor = Color.FromArgb(30, 41, 59);
+            lblTituloSeccion.Location = new Point(18, 32);
+            lblTituloSeccion.Name = "lblTituloSeccion";
+            lblTituloSeccion.Size = new Size(144, 28);
+            lblTituloSeccion.TabIndex = 9;
+            lblTituloSeccion.Text = "LIBRO DIARIO";
+            // 
+            // pnlDashboard
+            // 
+            pnlDashboard.BackColor = Color.FromArgb(248, 250, 252);
+            pnlDashboard.Controls.Add(pnlDashContent);
+            pnlDashboard.Controls.Add(pnlDashHeader);
+            pnlDashboard.Dock = DockStyle.Fill;
+            pnlDashboard.Location = new Point(0, 96);
+            pnlDashboard.Margin = new Padding(3, 4, 3, 4);
+            pnlDashboard.Name = "pnlDashboard";
+            pnlDashboard.Size = new Size(1257, 693);
+            pnlDashboard.TabIndex = 1;
+            // 
+            // pnlDashContent
+            // 
+            pnlDashContent.BackColor = Color.FromArgb(248, 250, 252);
+            pnlDashContent.Controls.Add(pnlAcciones);
+            pnlDashContent.Controls.Add(pnlListaAsientos);
+            pnlDashContent.Dock = DockStyle.Fill;
+            pnlDashContent.Location = new Point(0, 120);
+            pnlDashContent.Margin = new Padding(3, 4, 3, 4);
+            pnlDashContent.Name = "pnlDashContent";
+            pnlDashContent.Padding = new Padding(27);
+            pnlDashContent.Size = new Size(1257, 573);
+            pnlDashContent.TabIndex = 0;
+            // 
+            // pnlAcciones
+            // 
+            pnlAcciones.BackColor = Color.White;
+            pnlAcciones.Controls.Add(btnDashEliminar);
+            pnlAcciones.Controls.Add(btnDashGuardarBD);
+            pnlAcciones.Controls.Add(btnDashNuevo);
+            pnlAcciones.Controls.Add(lblAccionesHeader);
+            pnlAcciones.Dock = DockStyle.Right;
+            pnlAcciones.Location = new Point(910, 27);
+            pnlAcciones.Margin = new Padding(3, 4, 3, 4);
+            pnlAcciones.Name = "pnlAcciones";
+            pnlAcciones.Padding = new Padding(18, 16, 18, 16);
+            pnlAcciones.Size = new Size(320, 519);
+            pnlAcciones.TabIndex = 0;
+            // 
+            // btnDashEliminar
+            // 
+            btnDashEliminar.BackColor = Color.FromArgb(254, 242, 242);
+            btnDashEliminar.Cursor = Cursors.Hand;
+            btnDashEliminar.Dock = DockStyle.Top;
+            btnDashEliminar.FlatAppearance.BorderColor = Color.FromArgb(254, 202, 202);
+            btnDashEliminar.FlatStyle = FlatStyle.Flat;
+            btnDashEliminar.Font = new Font("Segoe UI", 9.5F);
+            btnDashEliminar.ForeColor = Color.FromArgb(185, 28, 28);
+            btnDashEliminar.Location = new Point(18, 215);
+            btnDashEliminar.Margin = new Padding(0, 5, 0, 5);
+            btnDashEliminar.Name = "btnDashEliminar";
+            btnDashEliminar.Padding = new Padding(11, 0, 0, 0);
+            btnDashEliminar.Size = new Size(284, 80);
+            btnDashEliminar.TabIndex = 0;
+            btnDashEliminar.Text = "🗑️  Eliminar Libro Diario\r\nRemueve la instancia de la memoria local.";
+            btnDashEliminar.TextAlign = ContentAlignment.MiddleLeft;
+            btnDashEliminar.UseVisualStyleBackColor = false;
+            // 
+            // btnDashGuardarBD
+            // 
+            btnDashGuardarBD.BackColor = Color.FromArgb(248, 250, 252);
+            btnDashGuardarBD.Cursor = Cursors.Hand;
+            btnDashGuardarBD.Dock = DockStyle.Top;
+            btnDashGuardarBD.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnDashGuardarBD.FlatStyle = FlatStyle.Flat;
+            btnDashGuardarBD.Font = new Font("Segoe UI", 9.5F);
+            btnDashGuardarBD.ForeColor = Color.FromArgb(30, 41, 59);
+            btnDashGuardarBD.Location = new Point(18, 135);
+            btnDashGuardarBD.Margin = new Padding(0, 5, 0, 5);
+            btnDashGuardarBD.Name = "btnDashGuardarBD";
+            btnDashGuardarBD.Padding = new Padding(11, 0, 0, 0);
+            btnDashGuardarBD.Size = new Size(284, 80);
+            btnDashGuardarBD.TabIndex = 1;
+            btnDashGuardarBD.Text = "💾  Guardar Cambios en BD\r\nSincroniza la instancia con PostgreSQL.";
+            btnDashGuardarBD.TextAlign = ContentAlignment.MiddleLeft;
+            btnDashGuardarBD.UseVisualStyleBackColor = false;
+            // 
+            // btnDashNuevo
+            // 
+            btnDashNuevo.BackColor = Color.FromArgb(239, 246, 255);
+            btnDashNuevo.Cursor = Cursors.Hand;
+            btnDashNuevo.Dock = DockStyle.Top;
+            btnDashNuevo.FlatAppearance.BorderColor = Color.FromArgb(191, 219, 254);
+            btnDashNuevo.FlatStyle = FlatStyle.Flat;
+            btnDashNuevo.Font = new Font("Segoe UI", 9.5F);
+            btnDashNuevo.ForeColor = Color.FromArgb(30, 64, 175);
+            btnDashNuevo.Location = new Point(18, 55);
+            btnDashNuevo.Margin = new Padding(0, 5, 0, 5);
+            btnDashNuevo.Name = "btnDashNuevo";
+            btnDashNuevo.Padding = new Padding(11, 0, 0, 0);
+            btnDashNuevo.Size = new Size(284, 80);
+            btnDashNuevo.TabIndex = 2;
+            btnDashNuevo.Text = "➕  Crear Nuevo Libro Diario\r\nRegistra una nueva instancia de libro.";
+            btnDashNuevo.TextAlign = ContentAlignment.MiddleLeft;
+            btnDashNuevo.UseVisualStyleBackColor = false;
+            // 
+            // lblAccionesHeader
+            // 
+            lblAccionesHeader.AutoSize = true;
+            lblAccionesHeader.Dock = DockStyle.Top;
+            lblAccionesHeader.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblAccionesHeader.ForeColor = Color.FromArgb(30, 41, 59);
+            lblAccionesHeader.Location = new Point(18, 16);
+            lblAccionesHeader.Name = "lblAccionesHeader";
+            lblAccionesHeader.Padding = new Padding(0, 0, 0, 16);
+            lblAccionesHeader.Size = new Size(88, 39);
+            lblAccionesHeader.TabIndex = 3;
+            lblAccionesHeader.Text = "Comenzar";
+            // 
+            // pnlListaAsientos
+            // 
+            pnlListaAsientos.BackColor = Color.White;
+            pnlListaAsientos.Controls.Add(lstLibros);
+            pnlListaAsientos.Controls.Add(txtBuscarDash);
+            pnlListaAsientos.Controls.Add(lblListaHeader);
+            pnlListaAsientos.Dock = DockStyle.Fill;
+            pnlListaAsientos.Location = new Point(27, 27);
+            pnlListaAsientos.Margin = new Padding(3, 4, 3, 4);
+            pnlListaAsientos.Name = "pnlListaAsientos";
+            pnlListaAsientos.Padding = new Padding(0, 0, 18, 0);
+            pnlListaAsientos.Size = new Size(1203, 519);
+            pnlListaAsientos.TabIndex = 1;
+            // 
+            // lstLibros
+            // 
+            lstLibros.BorderStyle = BorderStyle.None;
+            lstLibros.Dock = DockStyle.Fill;
+            lstLibros.DrawMode = DrawMode.OwnerDrawVariable;
+            lstLibros.ItemHeight = 74;
+            lstLibros.Location = new Point(0, 79);
+            lstLibros.Margin = new Padding(3, 4, 3, 4);
+            lstLibros.Name = "lstLibros";
+            lstLibros.Size = new Size(1185, 440);
+            lstLibros.TabIndex = 0;
+            // 
+            // txtBuscarDash
+            // 
+            txtBuscarDash.BorderStyle = BorderStyle.FixedSingle;
+            txtBuscarDash.Dock = DockStyle.Top;
+            txtBuscarDash.Font = new Font("Segoe UI", 9.5F);
+            txtBuscarDash.Location = new Point(0, 50);
+            txtBuscarDash.Margin = new Padding(18, 0, 18, 11);
+            txtBuscarDash.Name = "txtBuscarDash";
+            txtBuscarDash.PlaceholderText = "🔍  Buscar libros diarios (Alt+S)...";
+            txtBuscarDash.Size = new Size(1185, 29);
+            txtBuscarDash.TabIndex = 1;
+            // 
+            // lblListaHeader
+            // 
+            lblListaHeader.AutoSize = true;
+            lblListaHeader.Dock = DockStyle.Top;
+            lblListaHeader.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblListaHeader.ForeColor = Color.FromArgb(30, 41, 59);
+            lblListaHeader.Location = new Point(0, 0);
+            lblListaHeader.Name = "lblListaHeader";
+            lblListaHeader.Padding = new Padding(18, 16, 0, 11);
+            lblListaHeader.Size = new Size(218, 50);
+            lblListaHeader.TabIndex = 2;
+            lblListaHeader.Text = "Libros Diarios Guardados";
+            // 
             // pnlDashHeader
-            this.pnlDashHeader.BackColor = System.Drawing.Color.White;
-            this.pnlDashHeader.Controls.Add(this.lblBadgeTotal);
-            this.pnlDashHeader.Controls.Add(this.lblDashSubtitulo);
-            this.pnlDashHeader.Controls.Add(this.lblDashTitulo);
-            this.pnlDashHeader.Dock    = System.Windows.Forms.DockStyle.Top;
-            this.pnlDashHeader.Name    = "pnlDashHeader";
-            this.pnlDashHeader.Padding = new System.Windows.Forms.Padding(32, 20, 32, 20);
-            this.pnlDashHeader.Size    = new System.Drawing.Size(1100, 90);
-            this.pnlDashHeader.Paint  += (s, e) =>
-            {
-                using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(226, 232, 240));
-                e.Graphics.DrawLine(pen, 0, ((System.Windows.Forms.Panel)s!).Height - 1,
-                    ((System.Windows.Forms.Panel)s!).Width, ((System.Windows.Forms.Panel)s!).Height - 1);
-            };
-
-            this.lblDashTitulo.AutoSize  = true;
-            this.lblDashTitulo.Font      = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
-            this.lblDashTitulo.ForeColor = System.Drawing.Color.FromArgb(15, 23, 42);
-            this.lblDashTitulo.Location  = new System.Drawing.Point(32, 18);
-            this.lblDashTitulo.Name      = "lblDashTitulo";
-            this.lblDashTitulo.Text      = "Libro Diario";
-
-            this.lblDashSubtitulo.AutoSize  = true;
-            this.lblDashSubtitulo.Font      = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.lblDashSubtitulo.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
-            this.lblDashSubtitulo.Location  = new System.Drawing.Point(34, 54);
-            this.lblDashSubtitulo.Name      = "lblDashSubtitulo";
-            this.lblDashSubtitulo.Text      = "Selecciona un asiento o registra uno nuevo.";
-
-            this.lblBadgeTotal.AutoSize  = true;
-            this.lblBadgeTotal.Font      = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.lblBadgeTotal.ForeColor = System.Drawing.Color.FromArgb(37, 99, 235);
-            this.lblBadgeTotal.BackColor = System.Drawing.Color.FromArgb(219, 234, 254);
-            this.lblBadgeTotal.Location  = new System.Drawing.Point(220, 58);
-            this.lblBadgeTotal.Name      = "lblBadgeTotal";
-            this.lblBadgeTotal.Padding   = new System.Windows.Forms.Padding(6, 2, 6, 2);
-            this.lblBadgeTotal.Text      = "  0 Asientos  ";
-
-            // pnlDashContent (SplitContainer simulado con dos paneles)
-            this.pnlDashContent.BackColor = System.Drawing.Color.FromArgb(248, 250, 252);
-            this.pnlDashContent.Controls.Add(this.pnlAcciones);
-            this.pnlDashContent.Controls.Add(this.pnlListaAsientos);
-            this.pnlDashContent.Dock    = System.Windows.Forms.DockStyle.Fill;
-            this.pnlDashContent.Name    = "pnlDashContent";
-            this.pnlDashContent.Padding = new System.Windows.Forms.Padding(24, 20, 24, 20);
-
-            // pnlListaAsientos (izquierda)
-            this.pnlListaAsientos.BackColor = System.Drawing.Color.White;
-            this.pnlListaAsientos.Controls.Add(this.lstAsientos);
-            this.pnlListaAsientos.Controls.Add(this.txtBuscarDash);
-            this.pnlListaAsientos.Controls.Add(this.lblListaHeader);
-            this.pnlListaAsientos.Dock      = System.Windows.Forms.DockStyle.Fill;
-            this.pnlListaAsientos.Name      = "pnlListaAsientos";
-            this.pnlListaAsientos.Padding   = new System.Windows.Forms.Padding(0, 0, 16, 0);
-
-            this.lblListaHeader.AutoSize  = true;
-            this.lblListaHeader.Dock      = System.Windows.Forms.DockStyle.Top;
-            this.lblListaHeader.Font      = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.lblListaHeader.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.lblListaHeader.Name      = "lblListaHeader";
-            this.lblListaHeader.Padding   = new System.Windows.Forms.Padding(16, 12, 0, 8);
-            this.lblListaHeader.Text      = "Asientos Recientes y Guardados";
-
-            this.txtBuscarDash.Dock             = System.Windows.Forms.DockStyle.Top;
-            this.txtBuscarDash.Font             = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.txtBuscarDash.PlaceholderText  = "🔍  Buscar asientos (Alt+S)...";
-            this.txtBuscarDash.BorderStyle      = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtBuscarDash.Name             = "txtBuscarDash";
-            this.txtBuscarDash.Height           = 32;
-            this.txtBuscarDash.Margin           = new System.Windows.Forms.Padding(16, 0, 16, 8);
-
-            this.lstAsientos.Dock     = System.Windows.Forms.DockStyle.Fill;
-            this.lstAsientos.Name     = "lstAsientos";
-            this.lstAsientos.TabIndex = 0;
-            this.lstAsientos.DoubleClick += (s, e) =>
-            {
-                if (lstAsientos.SelectedItem is AsientoListItem item && !item.EsEncabezadoGrupo && !item.EsPlaceholder)
-                    MostrarVistaGrilla();
-            };
-
-            // Búsqueda en vivo en el dashboard
-            this.txtBuscarDash.TextChanged += (s, e) => FiltrarListaDash(txtBuscarDash.Text.Trim());
-
-            // pnlAcciones (derecha, ancho fijo 280)
-            this.pnlAcciones.BackColor = System.Drawing.Color.White;
-            this.pnlAcciones.Controls.Add(this.btnDashLimpiar);
-            this.pnlAcciones.Controls.Add(this.btnDashVerLibro);
-            this.pnlAcciones.Controls.Add(this.btnDashEjemplo);
-            this.pnlAcciones.Controls.Add(this.btnDashNuevo);
-            this.pnlAcciones.Controls.Add(this.lblAccionesHeader);
-            this.pnlAcciones.Dock      = System.Windows.Forms.DockStyle.Right;
-            this.pnlAcciones.Name      = "pnlAcciones";
-            this.pnlAcciones.Padding   = new System.Windows.Forms.Padding(16, 12, 16, 12);
-            this.pnlAcciones.Width     = 280;
-            this.pnlAcciones.Paint    += (s, e) =>
-            {
-                using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(226, 232, 240));
-                e.Graphics.DrawLine(pen, 0, 0, 0, ((System.Windows.Forms.Panel)s!).Height);
-            };
-
-            this.lblAccionesHeader.AutoSize  = true;
-            this.lblAccionesHeader.Dock      = System.Windows.Forms.DockStyle.Top;
-            this.lblAccionesHeader.Font      = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.lblAccionesHeader.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.lblAccionesHeader.Name      = "lblAccionesHeader";
-            this.lblAccionesHeader.Padding   = new System.Windows.Forms.Padding(0, 0, 0, 12);
-            this.lblAccionesHeader.Text      = "Comenzar";
-
-            // Acción: Nuevo Asiento
-            this.btnDashNuevo.Cursor                    = System.Windows.Forms.Cursors.Hand;
-            this.btnDashNuevo.Dock                      = System.Windows.Forms.DockStyle.Top;
-            this.btnDashNuevo.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(219, 234, 254);
-            this.btnDashNuevo.FlatStyle                 = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDashNuevo.Font                      = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnDashNuevo.ForeColor                 = System.Drawing.Color.FromArgb(30, 64, 175);
-            this.btnDashNuevo.BackColor                 = System.Drawing.Color.FromArgb(239, 246, 255);
-            this.btnDashNuevo.Height                    = 60;
-            this.btnDashNuevo.Margin                    = new System.Windows.Forms.Padding(0, 4, 0, 4);
-            this.btnDashNuevo.Name                      = "btnDashNuevo";
-            this.btnDashNuevo.Text                      = "➕  Crear nuevo asiento\r\nRegistra una nueva partida contable.";
-            this.btnDashNuevo.TextAlign                 = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDashNuevo.Padding                   = new System.Windows.Forms.Padding(10, 0, 0, 0);
-            this.btnDashNuevo.UseVisualStyleBackColor   = false;
-            this.btnDashNuevo.Click += (s, e) => AbrirNuevoAsiento();
-
-            // Acción: Ver Libro Diario completo
-            this.btnDashVerLibro.Cursor                    = System.Windows.Forms.Cursors.Hand;
-            this.btnDashVerLibro.Dock                      = System.Windows.Forms.DockStyle.Top;
-            this.btnDashVerLibro.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnDashVerLibro.FlatStyle                 = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDashVerLibro.Font                      = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnDashVerLibro.ForeColor                 = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.btnDashVerLibro.BackColor                 = System.Drawing.Color.FromArgb(248, 250, 252);
-            this.btnDashVerLibro.Height                    = 60;
-            this.btnDashVerLibro.Margin                    = new System.Windows.Forms.Padding(0, 4, 0, 4);
-            this.btnDashVerLibro.Name                      = "btnDashVerLibro";
-            this.btnDashVerLibro.Text                      = "📖  Abrir Libro Diario\r\nVer todos los asientos con detalle.";
-            this.btnDashVerLibro.TextAlign                 = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDashVerLibro.Padding                   = new System.Windows.Forms.Padding(10, 0, 0, 0);
-            this.btnDashVerLibro.UseVisualStyleBackColor   = false;
-            this.btnDashVerLibro.Click += (s, e) => MostrarVistaGrilla();
-
-            // Acción: Cargar Ejemplo
-            this.btnDashEjemplo.Cursor                    = System.Windows.Forms.Cursors.Hand;
-            this.btnDashEjemplo.Dock                      = System.Windows.Forms.DockStyle.Top;
-            this.btnDashEjemplo.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(203, 213, 225);
-            this.btnDashEjemplo.FlatStyle                 = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDashEjemplo.Font                      = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnDashEjemplo.ForeColor                 = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.btnDashEjemplo.BackColor                 = System.Drawing.Color.FromArgb(248, 250, 252);
-            this.btnDashEjemplo.Height                    = 60;
-            this.btnDashEjemplo.Margin                    = new System.Windows.Forms.Padding(0, 4, 0, 4);
-            this.btnDashEjemplo.Name                      = "btnDashEjemplo";
-            this.btnDashEjemplo.Text                      = "🔄  Cargar Asientos de Ejemplo\r\nCarga datos demostrativos calculados.";
-            this.btnDashEjemplo.TextAlign                 = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDashEjemplo.Padding                   = new System.Windows.Forms.Padding(10, 0, 0, 0);
-            this.btnDashEjemplo.UseVisualStyleBackColor   = false;
-            this.btnDashEjemplo.Click                    += (s, e) => CargarEjemploYRefrescar();
-
-            // Acción: Limpiar
-            this.btnDashLimpiar.Cursor                    = System.Windows.Forms.Cursors.Hand;
-            this.btnDashLimpiar.Dock                      = System.Windows.Forms.DockStyle.Top;
-            this.btnDashLimpiar.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(254, 202, 202);
-            this.btnDashLimpiar.FlatStyle                 = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDashLimpiar.Font                      = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.btnDashLimpiar.ForeColor                 = System.Drawing.Color.FromArgb(153, 27, 27);
-            this.btnDashLimpiar.BackColor                 = System.Drawing.Color.FromArgb(254, 242, 242);
-            this.btnDashLimpiar.Height                    = 60;
-            this.btnDashLimpiar.Margin                    = new System.Windows.Forms.Padding(0, 4, 0, 4);
-            this.btnDashLimpiar.Name                      = "btnDashLimpiar";
-            this.btnDashLimpiar.Text                      = "🗑  Limpiar Asientos en Memoria\r\nElimina todos los asientos de la sesión.";
-            this.btnDashLimpiar.TextAlign                 = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDashLimpiar.Padding                   = new System.Windows.Forms.Padding(10, 0, 0, 0);
-            this.btnDashLimpiar.UseVisualStyleBackColor   = false;
-            this.btnDashLimpiar.Click += (s, e) => LimpiarAsientos();
-
-            // ══ pnlGrillaContenedor ═══════════════════════════════════
-            this.pnlGrillaContenedor.BackColor = System.Drawing.Color.FromArgb(241, 245, 249);
-            this.pnlGrillaContenedor.Controls.Add(this.dgvLibroDiario);
-            this.pnlGrillaContenedor.Dock     = System.Windows.Forms.DockStyle.Fill;
-            this.pnlGrillaContenedor.Name     = "pnlGrillaContenedor";
-            this.pnlGrillaContenedor.Padding  = new System.Windows.Forms.Padding(16, 12, 16, 12);
-            this.pnlGrillaContenedor.Visible  = false;
-
+            // 
+            pnlDashHeader.BackColor = Color.White;
+            pnlDashHeader.Controls.Add(lblBadgeTotal);
+            pnlDashHeader.Controls.Add(lblDashSubtitulo);
+            pnlDashHeader.Controls.Add(lblDashTitulo);
+            pnlDashHeader.Dock = DockStyle.Top;
+            pnlDashHeader.Location = new Point(0, 0);
+            pnlDashHeader.Margin = new Padding(3, 4, 3, 4);
+            pnlDashHeader.Name = "pnlDashHeader";
+            pnlDashHeader.Padding = new Padding(37, 27, 37, 27);
+            pnlDashHeader.Size = new Size(1257, 120);
+            pnlDashHeader.TabIndex = 1;
+            // 
+            // lblBadgeTotal
+            // 
+            lblBadgeTotal.AutoSize = true;
+            lblBadgeTotal.BackColor = Color.FromArgb(219, 234, 254);
+            lblBadgeTotal.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblBadgeTotal.ForeColor = Color.FromArgb(37, 99, 235);
+            lblBadgeTotal.Location = new Point(297, 32);
+            lblBadgeTotal.Name = "lblBadgeTotal";
+            lblBadgeTotal.Padding = new Padding(7, 3, 7, 3);
+            lblBadgeTotal.Size = new Size(102, 26);
+            lblBadgeTotal.TabIndex = 0;
+            lblBadgeTotal.Text = "  0 Libro(s)  ";
+            // 
+            // lblDashSubtitulo
+            // 
+            lblDashSubtitulo.AutoSize = true;
+            lblDashSubtitulo.Font = new Font("Segoe UI", 9.5F);
+            lblDashSubtitulo.ForeColor = Color.FromArgb(100, 116, 139);
+            lblDashSubtitulo.Location = new Point(39, 72);
+            lblDashSubtitulo.Name = "lblDashSubtitulo";
+            lblDashSubtitulo.Size = new Size(619, 21);
+            lblDashSubtitulo.TabIndex = 1;
+            lblDashSubtitulo.Text = "Selecciona un libro diario existente o crea uno nuevo para comenzar a registrar partidas.";
+            // 
+            // lblDashTitulo
+            // 
+            lblDashTitulo.AutoSize = true;
+            lblDashTitulo.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            lblDashTitulo.ForeColor = Color.FromArgb(15, 23, 42);
+            lblDashTitulo.Location = new Point(37, 24);
+            lblDashTitulo.Name = "lblDashTitulo";
+            lblDashTitulo.Size = new Size(369, 41);
+            lblDashTitulo.TabIndex = 2;
+            lblDashTitulo.Text = "Gestión de Libros Diarios";
+            // 
+            // pnlGrillaContenedor
+            // 
+            pnlGrillaContenedor.BackColor = Color.FromArgb(241, 245, 249);
+            pnlGrillaContenedor.Controls.Add(dgvLibroDiario);
+            pnlGrillaContenedor.Dock = DockStyle.Fill;
+            pnlGrillaContenedor.Location = new Point(0, 96);
+            pnlGrillaContenedor.Margin = new Padding(3, 4, 3, 4);
+            pnlGrillaContenedor.Name = "pnlGrillaContenedor";
+            pnlGrillaContenedor.Padding = new Padding(18, 16, 18, 16);
+            pnlGrillaContenedor.Size = new Size(1257, 693);
+            pnlGrillaContenedor.TabIndex = 0;
+            pnlGrillaContenedor.Visible = false;
+            // 
             // dgvLibroDiario
-            this.dgvLibroDiario.AllowUserToAddRows    = false;
-            this.dgvLibroDiario.AllowUserToDeleteRows = false;
-            this.dgvLibroDiario.AllowUserToResizeRows = false;
-            this.dgvLibroDiario.AutoSizeColumnsMode   = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvLibroDiario.BackgroundColor       = System.Drawing.Color.White;
-            this.dgvLibroDiario.BorderStyle           = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dgvLibroDiario.CellBorderStyle       = System.Windows.Forms.DataGridViewCellBorderStyle.Single;
-            this.dgvLibroDiario.GridColor             = System.Drawing.Color.FromArgb(180, 198, 215);
-
-            cs1.Alignment          = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            cs1.BackColor          = System.Drawing.Color.FromArgb(189, 215, 238);
-            cs1.Font               = new System.Drawing.Font("Segoe UI", 10F);
-            cs1.ForeColor          = System.Drawing.Color.FromArgb(15, 23, 42);
-            cs1.SelectionBackColor = System.Drawing.Color.FromArgb(189, 215, 238);
-            cs1.SelectionForeColor = System.Drawing.Color.FromArgb(15, 23, 42);
-            cs1.WrapMode           = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvLibroDiario.ColumnHeadersDefaultCellStyle      = cs1;
-            this.dgvLibroDiario.ColumnHeadersHeight                 = 36;
-            this.dgvLibroDiario.ColumnHeadersHeightSizeMode         = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.dgvLibroDiario.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-                this.colFecha, this.colCuenta, this.colParcial, this.colDebe, this.colHaber });
-            this.dgvLibroDiario.Dock                               = System.Windows.Forms.DockStyle.Fill;
-            this.dgvLibroDiario.EnableHeadersVisualStyles          = false;
-            this.dgvLibroDiario.MultiSelect                        = false;
-            this.dgvLibroDiario.Name                               = "dgvLibroDiario";
-            this.dgvLibroDiario.ReadOnly                           = true;
-            this.dgvLibroDiario.RowHeadersVisible                  = false;
-            this.dgvLibroDiario.RowTemplate.Height                 = 26;
-            this.dgvLibroDiario.SelectionMode                      = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-
-            cs2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colFecha.DefaultCellStyle = cs2;
-            this.colFecha.FillWeight       = 85F;
-            this.colFecha.HeaderText       = "Fecha";
-            this.colFecha.Name             = "colFecha";
-            this.colFecha.ReadOnly         = true;
-            this.colFecha.SortMode         = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-
-            this.colCuenta.FillWeight  = 260F;
-            this.colCuenta.HeaderText  = "Cuenta";
-            this.colCuenta.Name        = "colCuenta";
-            this.colCuenta.ReadOnly    = true;
-            this.colCuenta.SortMode    = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-
-            cs3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            cs3.Format    = "N2";
-            this.colParcial.DefaultCellStyle = cs3;
-            this.colParcial.FillWeight       = 95F;
-            this.colParcial.HeaderText       = "Parcial";
-            this.colParcial.Name             = "colParcial";
-            this.colParcial.ReadOnly         = true;
-            this.colParcial.SortMode         = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-
-            cs4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            cs4.Format    = "N2";
-            this.colDebe.DefaultCellStyle = cs4;
-            this.colDebe.FillWeight       = 95F;
-            this.colDebe.HeaderText       = "Debe";
-            this.colDebe.Name             = "colDebe";
-            this.colDebe.ReadOnly         = true;
-            this.colDebe.SortMode         = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-
-            cs5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            cs5.Format    = "N2";
-            this.colHaber.DefaultCellStyle = cs5;
-            this.colHaber.FillWeight       = 95F;
-            this.colHaber.HeaderText       = "Haber";
-            this.colHaber.Name             = "colHaber";
-            this.colHaber.ReadOnly         = true;
-            this.colHaber.SortMode         = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-
-            // ══ pnlResumenInferior ════════════════════════════════════
-            this.pnlResumenInferior.BackColor = System.Drawing.Color.White;
-            this.pnlResumenInferior.Controls.Add(this.lblBadgeEstado);
-            this.pnlResumenInferior.Controls.Add(this.lblTotalHaberGlobal);
-            this.pnlResumenInferior.Controls.Add(this.lblTotalDebeGlobal);
-            this.pnlResumenInferior.Controls.Add(this.lblTotalAsientos);
-            this.pnlResumenInferior.Dock    = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlResumenInferior.Name    = "pnlResumenInferior";
-            this.pnlResumenInferior.Padding = new System.Windows.Forms.Padding(16, 10, 16, 10);
-            this.pnlResumenInferior.Size    = new System.Drawing.Size(1100, 48);
-            this.pnlResumenInferior.Visible = false;
-            this.pnlResumenInferior.Paint  += (s, e) =>
-            {
-                using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(226, 232, 240));
-                e.Graphics.DrawLine(pen, 0, 0, ((System.Windows.Forms.Panel)s!).Width, 0);
-            };
-
-            this.lblBadgeEstado.Anchor    = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            this.lblBadgeEstado.AutoSize  = true;
-            this.lblBadgeEstado.Font      = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.lblBadgeEstado.ForeColor = System.Drawing.Color.FromArgb(22, 163, 74);
-            this.lblBadgeEstado.Location  = new System.Drawing.Point(820, 15);
-            this.lblBadgeEstado.Name      = "lblBadgeEstado";
-            this.lblBadgeEstado.Text      = "✓ Asientos Dobles Cuadrados";
-
-            this.lblTotalHaberGlobal.AutoSize  = true;
-            this.lblTotalHaberGlobal.Font      = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.lblTotalHaberGlobal.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.lblTotalHaberGlobal.Location  = new System.Drawing.Point(400, 15);
-            this.lblTotalHaberGlobal.Name      = "lblTotalHaberGlobal";
-            this.lblTotalHaberGlobal.Text      = "Total Haber: $0.00";
-
-            this.lblTotalDebeGlobal.AutoSize  = true;
-            this.lblTotalDebeGlobal.Font      = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.lblTotalDebeGlobal.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.lblTotalDebeGlobal.Location  = new System.Drawing.Point(190, 15);
-            this.lblTotalDebeGlobal.Name      = "lblTotalDebeGlobal";
-            this.lblTotalDebeGlobal.Text      = "Total Debe: $0.00";
-
-            this.lblTotalAsientos.AutoSize  = true;
-            this.lblTotalAsientos.Font      = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.lblTotalAsientos.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
-            this.lblTotalAsientos.Location  = new System.Drawing.Point(16, 15);
-            this.lblTotalAsientos.Name      = "lblTotalAsientos";
-            this.lblTotalAsientos.Text      = "Asientos: 0";
-
-            // ══ frmLibroDiario ════════════════════════════════════════
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode       = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor           = System.Drawing.Color.White;
-            this.ClientSize          = new System.Drawing.Size(1100, 640);
-            this.Controls.Add(this.pnlGrillaContenedor);
-            this.Controls.Add(this.pnlDashboard);
-            this.Controls.Add(this.pnlResumenInferior);
-            this.Controls.Add(this.pnlToolbar);
-            this.FormBorderStyle     = System.Windows.Forms.FormBorderStyle.None;
-            this.Name                = "frmLibroDiario";
-            this.Text                = "Libro Diario";
-
-            this.pnlToolbar.ResumeLayout(false);
-            this.pnlToolbar.PerformLayout();
-            this.pnlFiltroFechas.ResumeLayout(false);
-            this.pnlFiltroFechas.PerformLayout();
-            this.pnlDashboard.ResumeLayout(false);
-            this.pnlDashHeader.ResumeLayout(false);
-            this.pnlDashHeader.PerformLayout();
-            this.pnlDashContent.ResumeLayout(false);
-            this.pnlListaAsientos.ResumeLayout(false);
-            this.pnlListaAsientos.PerformLayout();
-            this.pnlAcciones.ResumeLayout(false);
-            this.pnlAcciones.PerformLayout();
-            this.pnlGrillaContenedor.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLibroDiario)).EndInit();
-            this.pnlResumenInferior.ResumeLayout(false);
-            this.pnlResumenInferior.PerformLayout();
-            this.ResumeLayout(false);
+            // 
+            dgvLibroDiario.AllowUserToAddRows = false;
+            dgvLibroDiario.AllowUserToDeleteRows = false;
+            dgvLibroDiario.AllowUserToResizeRows = false;
+            dgvLibroDiario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvLibroDiario.BackgroundColor = Color.White;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(189, 215, 238);
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle1.ForeColor = Color.FromArgb(15, 23, 42);
+            dataGridViewCellStyle1.SelectionBackColor = Color.FromArgb(189, 215, 238);
+            dataGridViewCellStyle1.SelectionForeColor = Color.FromArgb(15, 23, 42);
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            dgvLibroDiario.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dgvLibroDiario.ColumnHeadersHeight = 36;
+            dgvLibroDiario.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            dgvLibroDiario.Columns.AddRange(new DataGridViewColumn[] { colFecha, colCuenta, colParcial, colDebe, colHaber });
+            dgvLibroDiario.Dock = DockStyle.Fill;
+            dgvLibroDiario.EnableHeadersVisualStyles = false;
+            dgvLibroDiario.GridColor = Color.FromArgb(180, 198, 215);
+            dgvLibroDiario.Location = new Point(18, 16);
+            dgvLibroDiario.Margin = new Padding(3, 4, 3, 4);
+            dgvLibroDiario.MultiSelect = false;
+            dgvLibroDiario.Name = "dgvLibroDiario";
+            dgvLibroDiario.ReadOnly = true;
+            dgvLibroDiario.RowHeadersVisible = false;
+            dgvLibroDiario.RowHeadersWidth = 51;
+            dgvLibroDiario.RowTemplate.Height = 26;
+            dgvLibroDiario.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvLibroDiario.Size = new Size(1221, 661);
+            dgvLibroDiario.TabIndex = 0;
+            // 
+            // colFecha
+            // 
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colFecha.DefaultCellStyle = dataGridViewCellStyle2;
+            colFecha.FillWeight = 85F;
+            colFecha.HeaderText = "Fecha";
+            colFecha.MinimumWidth = 6;
+            colFecha.Name = "colFecha";
+            colFecha.ReadOnly = true;
+            colFecha.SortMode = DataGridViewColumnSortMode.NotSortable;
+            // 
+            // colCuenta
+            // 
+            colCuenta.FillWeight = 260F;
+            colCuenta.HeaderText = "Cuenta";
+            colCuenta.MinimumWidth = 6;
+            colCuenta.Name = "colCuenta";
+            colCuenta.ReadOnly = true;
+            colCuenta.SortMode = DataGridViewColumnSortMode.NotSortable;
+            // 
+            // colParcial
+            // 
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle3.Format = "N2";
+            colParcial.DefaultCellStyle = dataGridViewCellStyle3;
+            colParcial.FillWeight = 95F;
+            colParcial.HeaderText = "Parcial";
+            colParcial.MinimumWidth = 6;
+            colParcial.Name = "colParcial";
+            colParcial.ReadOnly = true;
+            colParcial.SortMode = DataGridViewColumnSortMode.NotSortable;
+            // 
+            // colDebe
+            // 
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle4.Format = "N2";
+            colDebe.DefaultCellStyle = dataGridViewCellStyle4;
+            colDebe.FillWeight = 95F;
+            colDebe.HeaderText = "Debe";
+            colDebe.MinimumWidth = 6;
+            colDebe.Name = "colDebe";
+            colDebe.ReadOnly = true;
+            colDebe.SortMode = DataGridViewColumnSortMode.NotSortable;
+            // 
+            // colHaber
+            // 
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle5.Format = "N2";
+            colHaber.DefaultCellStyle = dataGridViewCellStyle5;
+            colHaber.FillWeight = 95F;
+            colHaber.HeaderText = "Haber";
+            colHaber.MinimumWidth = 6;
+            colHaber.Name = "colHaber";
+            colHaber.ReadOnly = true;
+            colHaber.SortMode = DataGridViewColumnSortMode.NotSortable;
+            // 
+            // pnlResumenInferior
+            // 
+            pnlResumenInferior.BackColor = Color.White;
+            pnlResumenInferior.Controls.Add(lblBadgeEstado);
+            pnlResumenInferior.Controls.Add(lblTotalHaberGlobal);
+            pnlResumenInferior.Controls.Add(lblTotalDebeGlobal);
+            pnlResumenInferior.Controls.Add(lblTotalAsientos);
+            pnlResumenInferior.Dock = DockStyle.Bottom;
+            pnlResumenInferior.Location = new Point(0, 789);
+            pnlResumenInferior.Margin = new Padding(3, 4, 3, 4);
+            pnlResumenInferior.Name = "pnlResumenInferior";
+            pnlResumenInferior.Padding = new Padding(18, 13, 18, 13);
+            pnlResumenInferior.Size = new Size(1257, 64);
+            pnlResumenInferior.TabIndex = 2;
+            pnlResumenInferior.Visible = false;
+            // 
+            // lblBadgeEstado
+            // 
+            lblBadgeEstado.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            lblBadgeEstado.AutoSize = true;
+            lblBadgeEstado.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            lblBadgeEstado.ForeColor = Color.FromArgb(22, 163, 74);
+            lblBadgeEstado.Location = new Point(937, 20);
+            lblBadgeEstado.Name = "lblBadgeEstado";
+            lblBadgeEstado.Size = new Size(227, 21);
+            lblBadgeEstado.TabIndex = 0;
+            lblBadgeEstado.Text = "✓ Asientos Dobles Cuadrados";
+            // 
+            // lblTotalHaberGlobal
+            // 
+            lblTotalHaberGlobal.AutoSize = true;
+            lblTotalHaberGlobal.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            lblTotalHaberGlobal.ForeColor = Color.FromArgb(30, 41, 59);
+            lblTotalHaberGlobal.Location = new Point(457, 20);
+            lblTotalHaberGlobal.Name = "lblTotalHaberGlobal";
+            lblTotalHaberGlobal.Size = new Size(143, 21);
+            lblTotalHaberGlobal.TabIndex = 1;
+            lblTotalHaberGlobal.Text = "Total Haber: $0.00";
+            // 
+            // lblTotalDebeGlobal
+            // 
+            lblTotalDebeGlobal.AutoSize = true;
+            lblTotalDebeGlobal.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            lblTotalDebeGlobal.ForeColor = Color.FromArgb(30, 41, 59);
+            lblTotalDebeGlobal.Location = new Point(217, 20);
+            lblTotalDebeGlobal.Name = "lblTotalDebeGlobal";
+            lblTotalDebeGlobal.Size = new Size(136, 21);
+            lblTotalDebeGlobal.TabIndex = 2;
+            lblTotalDebeGlobal.Text = "Total Debe: $0.00";
+            // 
+            // lblTotalAsientos
+            // 
+            lblTotalAsientos.AutoSize = true;
+            lblTotalAsientos.Font = new Font("Segoe UI", 9.5F);
+            lblTotalAsientos.ForeColor = Color.FromArgb(71, 85, 105);
+            lblTotalAsientos.Location = new Point(18, 20);
+            lblTotalAsientos.Name = "lblTotalAsientos";
+            lblTotalAsientos.Size = new Size(85, 21);
+            lblTotalAsientos.TabIndex = 3;
+            lblTotalAsientos.Text = "Asientos: 0";
+            // 
+            // frmLibroDiario
+            // 
+            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.White;
+            ClientSize = new Size(1257, 853);
+            Controls.Add(pnlGrillaContenedor);
+            Controls.Add(pnlDashboard);
+            Controls.Add(pnlResumenInferior);
+            Controls.Add(pnlToolbar);
+            FormBorderStyle = FormBorderStyle.None;
+            Margin = new Padding(3, 4, 3, 4);
+            Name = "frmLibroDiario";
+            Text = "Libro Diario";
+            pnlToolbar.ResumeLayout(false);
+            pnlToolbar.PerformLayout();
+            pnlFiltroFechas.ResumeLayout(false);
+            pnlFiltroFechas.PerformLayout();
+            pnlDashboard.ResumeLayout(false);
+            pnlDashContent.ResumeLayout(false);
+            pnlAcciones.ResumeLayout(false);
+            pnlAcciones.PerformLayout();
+            pnlListaAsientos.ResumeLayout(false);
+            pnlListaAsientos.PerformLayout();
+            pnlDashHeader.ResumeLayout(false);
+            pnlDashHeader.PerformLayout();
+            pnlGrillaContenedor.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvLibroDiario).EndInit();
+            pnlResumenInferior.ResumeLayout(false);
+            pnlResumenInferior.PerformLayout();
+            ResumeLayout(false);
         }
 
         #endregion
@@ -648,13 +754,12 @@ namespace App_Contable.Presentacion
         private System.Windows.Forms.Panel    pnlListaAsientos;
         private System.Windows.Forms.Label    lblListaHeader;
         private System.Windows.Forms.TextBox  txtBuscarDash;
-        private App_Contable.Presentacion.AsientoListBox lstAsientos;
+        private App_Contable.Presentacion.LibroDiarioInstanciaListBox lstLibros;
         private System.Windows.Forms.Panel    pnlAcciones;
         private System.Windows.Forms.Label    lblAccionesHeader;
         private System.Windows.Forms.Button   btnDashNuevo;
-        private System.Windows.Forms.Button   btnDashEjemplo;
-        private System.Windows.Forms.Button   btnDashVerLibro;
-        private System.Windows.Forms.Button   btnDashLimpiar;
+        private System.Windows.Forms.Button   btnDashGuardarBD;
+        private System.Windows.Forms.Button   btnDashEliminar;
         // Grilla
         private System.Windows.Forms.Panel    pnlGrillaContenedor;
         private System.Windows.Forms.DataGridView dgvLibroDiario;
@@ -671,3 +776,4 @@ namespace App_Contable.Presentacion
         private System.Windows.Forms.Label    lblBadgeEstado;
     }
 }
+

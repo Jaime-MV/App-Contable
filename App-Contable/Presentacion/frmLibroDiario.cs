@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using App_Contable.Datos;
 using App_Contable.Logica;
 using App_Contable.Modelos;
 
@@ -12,10 +14,9 @@ namespace App_Contable.Presentacion
     public partial class frmLibroDiario : Form
     {
         private readonly LibroDiarioServicio _servicio = LibroDiarioServicio.Instancia;
+        private readonly LibroDiarioStorageService _storageService = new();
         private List<FilaLibroDiarioVisual> _filasActuales = new();
-
-        // ─── Vista actual ────────────────────────────────────────────
-        private bool _enVistaGrilla = false;
+        private LibroDiarioInstancia? _instanciaActiva;
 
         public frmLibroDiario()
         {
@@ -59,7 +60,67 @@ namespace App_Contable.Presentacion
             btnFiltrar.Click         += btnFiltrar_Click;
 
             // Botón "Volver al inicio" (solo visible en grilla)
-            btnVolverDashboard.Click += (s, e) => MostrarVistaDashboard();
+            btnVolverDashboard.Click += (s, e) => VolverAlDashboard();
+
+            // Eventos de panel lateral derecho del Dashboard
+            btnDashNuevo.Click     += btnCrearLibro_Click;
+            btnDashGuardarBD.Click += btnGuardarBD_Click;
+            btnDashEliminar.Click  += btnEliminarLibro_Click;
+
+            // Búsqueda en vivo en dashboard
+            txtBuscarDash.TextChanged += (s, e) => RefrescarDashboard();
+
+            // Doble clic en la lista para abrir libro
+            lstLibros.DoubleClick += (s, e) =>
+            {
+                var libro = ObtenerLibroSeleccionado();
+                if (libro != null)
+                {
+                    AbrirInstanciaLibro(libro);
+                }
+            };
+
+            // Bordes y divisores personalizados en paneles
+            pnlToolbar.Paint += PnlToolbar_Paint;
+            pnlDashHeader.Paint += PnlDashHeader_Paint;
+            pnlAcciones.Paint += PnlAcciones_Paint;
+            pnlResumenInferior.Paint += PnlResumenInferior_Paint;
+        }
+
+        private void PnlToolbar_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is Panel pnl)
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, pnl.Height - 1, pnl.Width, pnl.Height - 1);
+            }
+        }
+
+        private void PnlDashHeader_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is Panel pnl)
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, pnl.Height - 1, pnl.Width, pnl.Height - 1);
+            }
+        }
+
+        private void PnlAcciones_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is Panel pnl)
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, 0, 0, pnl.Height);
+            }
+        }
+
+        private void PnlResumenInferior_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is Panel pnl)
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, 0, pnl.Width, 0);
+            }
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -67,9 +128,7 @@ namespace App_Contable.Presentacion
         // ══════════════════════════════════════════════════════════════
         private void MostrarVistaDashboard()
         {
-            _enVistaGrilla = false;
-
-            // Panel de toolbar: solo título + botón Nuevo en dashboard
+            // Toolbar en dashboard
             pnlFiltroFechas.Visible      = false;
             btnEliminarAsiento.Visible   = false;
             btnEditarAsiento.Visible     = false;
@@ -79,9 +138,9 @@ namespace App_Contable.Presentacion
             btnActualizar.Visible        = false;
             btnFiltrar.Visible           = false;
             btnVolverDashboard.Visible   = false;
-            btnNuevoAsiento.Visible      = true;
+            btnNuevoAsiento.Visible      = false;
 
-            lblTituloSeccion.Text = "LIBRO DIARIO";
+            lblTituloSeccion.Text = "GESTIÓN DE LIBROS DIARIOS";
 
             // Mostrar dashboard, ocultar grilla y footer
             pnlDashboard.Visible         = true;
@@ -94,8 +153,6 @@ namespace App_Contable.Presentacion
 
         private void MostrarVistaGrilla()
         {
-            _enVistaGrilla = true;
-
             // Mostrar controles de toolbar completos
             pnlFiltroFechas.Visible      = true;
             btnEliminarAsiento.Visible   = true;
@@ -108,7 +165,9 @@ namespace App_Contable.Presentacion
             btnVolverDashboard.Visible   = true;
             btnNuevoAsiento.Visible      = true;
 
-            lblTituloSeccion.Text = "Libro Diario — Detalle";
+            lblTituloSeccion.Text = _instanciaActiva != null
+                ? $"LIBRO DIARIO — {_instanciaActiva.Nombre.ToUpper()}"
+                : "LIBRO DIARIO — DETALLE";
 
             // Mostrar grilla y footer, ocultar dashboard
             pnlDashboard.Visible         = false;
@@ -118,65 +177,196 @@ namespace App_Contable.Presentacion
             CargarDatos();
         }
 
+        private void AbrirInstanciaLibro(LibroDiarioInstancia instancia)
+        {
+            _instanciaActiva = instancia;
+
+            // Sincronizar fechas del libro
+            dtpFechaInicio.Value = instancia.FechaInicio;
+            dtpFechaFin.Value    = instancia.FechaFin;
+
+            // Cargar asientos de la instancia en el servicio
+            _servicio.LimpiarTodos();
+            foreach (var asiento in instancia.Asientos)
+            {
+                _servicio.AgregarAsiento(asiento, out _);
+            }
+
+            MostrarVistaGrilla();
+        }
+
+        private void VolverAlDashboard()
+        {
+            if (_instanciaActiva != null)
+            {
+                // Persistir asientos actuales en la instancia
+                _instanciaActiva.Asientos = _servicio.ObtenerAsientos().ToList();
+                _instanciaActiva.FechaModificacion = DateTime.Now;
+                _storageService.GuardarLibro(_instanciaActiva);
+            }
+
+            MostrarVistaDashboard();
+        }
+
         // ══════════════════════════════════════════════════════════════
-        //  DASHBOARD — Panel de inicio estilo Kardex
+        //  DASHBOARD — Gestión de Instancias de Libros Diarios
         // ══════════════════════════════════════════════════════════════
         private void RefrescarDashboard()
         {
-            // Encabezado
-            lblDashTitulo.Text    = "Libro Diario";
-            lblDashSubtitulo.Text = "Selecciona un asiento para ver su detalle o registra uno nuevo.";
+            var libros = _storageService.ObtenerLibros();
+            string filtro = txtBuscarDash.Text.Trim();
 
-            // Contar y mostrar badge
-            var asientos = _servicio.ObtenerAsientos();
-            lblBadgeTotal.Text = $"  {asientos.Count} Asiento(s)  ";
-
-            // Poblar lista de asientos recientes
-            lstAsientos.Items.Clear();
-
-            if (!asientos.Any())
+            if (!string.IsNullOrWhiteSpace(filtro))
             {
-                lstAsientos.Items.Add(new AsientoListItem
+                libros = libros.Where(l =>
+                    l.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase) ||
+                    l.Empresa.Contains(filtro, StringComparison.OrdinalIgnoreCase) ||
+                    l.TextoPeriodo.Contains(filtro, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            lblBadgeTotal.Text = $"  {libros.Count} Libro(s)  ";
+            lstLibros.Items.Clear();
+
+            if (!libros.Any())
+            {
+                lstLibros.Items.Add(new LibroDiarioListItem
                 {
-                    Numero       = 0,
-                    FechaTexto   = "—",
-                    Concepto     = "No hay asientos registrados aún.",
-                    TotalDebe    = 0,
+                    Titulo = "No hay libros diarios registrados aún.",
+                    Subtitulo = "Crea un nuevo libro desde el menú de la derecha.",
                     EsPlaceholder = true
                 });
                 return;
             }
 
-            // Agrupar por HOY y ANTERIORES (como en Kardex)
-            var hoy        = DateTime.Today;
-            var deHoy      = asientos.Where(a => a.Fecha.Date == hoy).OrderByDescending(a => a.NumeroAsiento).ToList();
-            var anteriores = asientos.Where(a => a.Fecha.Date != hoy).OrderByDescending(a => a.NumeroAsiento).ToList();
+            // Agrupar por grupo temporal ("Hoy", "Esta semana", "Este mes", "Anteriores")
+            var grupos = libros.GroupBy(l => l.GrupoTemporal).ToList();
 
-            if (deHoy.Any())
+            foreach (var grupo in grupos)
             {
-                lstAsientos.Items.Add(new AsientoListItem { EsEncabezadoGrupo = true, Concepto = "HOY" });
-                foreach (var a in deHoy)
-                    lstAsientos.Items.Add(AsientoAListItem(a));
-            }
+                lstLibros.Items.Add(new LibroDiarioListItem
+                {
+                    EsEncabezadoGrupo = true,
+                    Titulo = grupo.Key.ToUpper()
+                });
 
-            if (anteriores.Any())
-            {
-                lstAsientos.Items.Add(new AsientoListItem { EsEncabezadoGrupo = true, Concepto = "ANTERIORES" });
-                foreach (var a in anteriores)
-                    lstAsientos.Items.Add(AsientoAListItem(a));
+                foreach (var libro in grupo)
+                {
+                    lstLibros.Items.Add(new LibroDiarioListItem
+                    {
+                        Instancia = libro,
+                        Titulo = libro.Nombre,
+                        Subtitulo = libro.DescripcionSecundaria,
+                        BadgeTexto = libro.TextoBadgeDestino,
+                        Destino = libro.DestinoGuardado,
+                        FechaModTexto = $"Modificado: {libro.FechaModificacion:dd/MM/yyyy HH:mm}",
+                        TotalDebe = libro.TotalDebe,
+                        CantidadAsientos = libro.Asientos.Count
+                    });
+                }
             }
         }
 
-        private static AsientoListItem AsientoAListItem(AsientoContable a) => new()
+        private LibroDiarioInstancia? ObtenerLibroSeleccionado()
         {
-            Numero      = a.NumeroAsiento,
-            FechaTexto  = a.Fecha.ToString("dd/MM/yyyy"),
-            Concepto    = $"Asiento N° {a.NumeroAsiento} — {a.Concepto}",
-            TotalDebe   = a.TotalDebe,
-            EstaCuadrado = a.EstaCuadrado,
-            CuentasPrinc = string.Join(", ",
-                a.Movimientos.Select(m => m.CuentaPrincipal).Distinct().Take(3))
-        };
+            if (lstLibros.SelectedItem is LibroDiarioListItem item && !item.EsEncabezadoGrupo && !item.EsPlaceholder)
+            {
+                return item.Instancia;
+            }
+            return null;
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  ACCIONES DEL DASHBOARD
+        // ══════════════════════════════════════════════════════════════
+
+        private void btnCrearLibro_Click(object? sender, EventArgs e)
+        {
+            using var modal = new frmCrearLibroDiarioModal();
+            if (modal.ShowDialog(this) == DialogResult.OK && modal.InstanciaCreada != null)
+            {
+                _storageService.GuardarLibro(modal.InstanciaCreada);
+                RefrescarDashboard();
+                AbrirInstanciaLibro(modal.InstanciaCreada);
+            }
+        }
+
+        private async void btnGuardarBD_Click(object? sender, EventArgs e)
+        {
+            var libro = ObtenerLibroSeleccionado();
+            if (libro == null)
+            {
+                MessageBox.Show(
+                    "Por favor seleccione un Libro Diario de la lista para sincronizar con la Base de Datos.",
+                    "Seleccionar Libro Diario",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                btnDashGuardarBD.Enabled = false;
+
+                bool exito = await _storageService.GuardarEnBaseDatosAsync(libro);
+                if (exito)
+                {
+                    MessageBox.Show(
+                        "Módulo de persistencia en PostgreSQL en cola de implementación.\n\n" +
+                        $"• Libro Diario: '{libro.Nombre}'\n" +
+                        $"• Empresa: {(string.IsNullOrWhiteSpace(libro.Empresa) ? "General" : libro.Empresa)}\n" +
+                        $"• Período: {libro.TextoPeriodo}\n" +
+                        $"• Asientos registrados: {libro.Asientos.Count}\n" +
+                        $"• Destino: {libro.TextoBadgeDestino}\n\n" +
+                        "La instancia se encuentra actualmente almacenada localmente en memoria de forma segura.",
+                        "Sincronización con Base de Datos",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+                btnDashGuardarBD.Enabled = true;
+            }
+        }
+
+        private void btnEliminarLibro_Click(object? sender, EventArgs e)
+        {
+            var libro = ObtenerLibroSeleccionado();
+            if (libro == null)
+            {
+                MessageBox.Show(
+                    "Por favor seleccione un Libro Diario de la lista para eliminar.",
+                    "Seleccionar Libro Diario",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            var confirmacion = MessageBox.Show(
+                $"¿Está seguro de que desea eliminar la instancia seleccionada?\n\n" +
+                $"• Nombre: {libro.Nombre}\n" +
+                $"• Empresa: {(string.IsNullOrWhiteSpace(libro.Empresa) ? "General" : libro.Empresa)}\n" +
+                $"• Período: {libro.TextoPeriodo}\n" +
+                $"• Asientos registrados: {libro.Asientos.Count}\n\n" +
+                "Esta acción eliminará el libro de la lista y de la memoria local. ¿Desea continuar?",
+                "Confirmar Eliminación de Libro Diario",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (confirmacion == DialogResult.Yes)
+            {
+                _storageService.EliminarLibro(libro.Id);
+                RefrescarDashboard();
+
+                MessageBox.Show(
+                    $"El libro diario '{libro.Nombre}' ha sido eliminado exitosamente.",
+                    "Libro Diario Eliminado",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+        }
 
         // ══════════════════════════════════════════════════════════════
         //  GRILLA — Carga y pintado
@@ -248,47 +438,78 @@ namespace App_Contable.Presentacion
             if (row.Tag is not FilaLibroDiarioVisual fila) return;
 
             if (e.CellStyle != null && e.ColumnIndex == colFecha.Index && !string.IsNullOrEmpty(fila.Fecha))
-                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            {
+                e.CellStyle.ForeColor = Color.FromArgb(71, 85, 105);
+                e.CellStyle.Font      = new Font("Segoe UI", 9f, FontStyle.Regular);
+            }
         }
 
         private void ActualizarBarraResumen()
         {
-            var asientos  = _servicio.ObtenerAsientos();
-            decimal debe  = asientos.Sum(a => a.TotalDebe);
-            decimal haber = asientos.Sum(a => a.TotalHaber);
+            var asientos = _servicio.ObtenerAsientos();
+            decimal totalDebe  = asientos.Sum(a => a.TotalDebe);
+            decimal totalHaber = asientos.Sum(a => a.TotalHaber);
+            bool todosCuadrados = asientos.All(a => a.EstaCuadrado);
 
-            lblTotalAsientos.Text    = $"Total Asientos: {asientos.Count}";
-            lblTotalDebeGlobal.Text  = $"Total Debe: {debe:C2}";
-            lblTotalHaberGlobal.Text = $"Total Haber: {haber:C2}";
+            lblTotalAsientos.Text    = $"Asientos: {asientos.Count}";
+            lblTotalDebeGlobal.Text  = $"Total Debe: {totalDebe:C2}";
+            lblTotalHaberGlobal.Text = $"Total Haber: {totalHaber:C2}";
 
-            bool cuadradas = asientos.All(a => a.EstaCuadrado);
-            if (cuadradas && asientos.Any())
-            {
-                lblBadgeEstado.Text      = "✓ Asientos Dobles Cuadrados";
-                lblBadgeEstado.ForeColor = Color.FromArgb(22, 163, 74);
-            }
-            else if (!asientos.Any())
+            if (!asientos.Any())
             {
                 lblBadgeEstado.Text      = "Sin asientos registrados";
                 lblBadgeEstado.ForeColor = Color.FromArgb(100, 116, 139);
             }
+            else if (todosCuadrados && Math.Round(totalDebe, 2) == Math.Round(totalHaber, 2))
+            {
+                lblBadgeEstado.Text      = "✓ Asientos Dobles Cuadrados";
+                lblBadgeEstado.ForeColor = Color.FromArgb(22, 163, 74);
+            }
             else
             {
-                lblBadgeEstado.Text      = "⚠ Advertencia: Asientos descuadrados";
+                lblBadgeEstado.Text      = "⚠ Hay asientos descuadrados";
                 lblBadgeEstado.ForeColor = Color.FromArgb(220, 38, 38);
             }
         }
 
         // ══════════════════════════════════════════════════════════════
-        //  ACCIONES
+        //  TOOLBAR EN GRILLA
         // ══════════════════════════════════════════════════════════════
         private void AbrirNuevoAsiento()
         {
-            using var dlg = new frmAgregarAsiento();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using var form = new frmAgregarAsiento();
+            if (form.ShowDialog(this) == DialogResult.OK)
             {
-                if (_enVistaGrilla) CargarDatos();
-                else { RefrescarDashboard(); }
+                CargarDatos();
+                if (_instanciaActiva != null)
+                {
+                    _instanciaActiva.Asientos = _servicio.ObtenerAsientos().ToList();
+                    _storageService.GuardarLibro(_instanciaActiva);
+                }
+            }
+        }
+
+        private void btnEditarAsiento_Click(object? sender, EventArgs e)
+        {
+            if (dgvLibroDiario.CurrentRow?.Tag is not FilaLibroDiarioVisual fila || fila.NumeroAsiento <= 0)
+            {
+                MessageBox.Show("Por favor, seleccione una fila perteneciente a un asiento para editar.",
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var asiento = _servicio.ObtenerAsientos().FirstOrDefault(a => a.NumeroAsiento == fila.NumeroAsiento);
+            if (asiento == null) return;
+
+            using var form = new frmAgregarAsiento(asiento);
+            if (form.ShowDialog(this) == DialogResult.OK)
+            {
+                CargarDatos();
+                if (_instanciaActiva != null)
+                {
+                    _instanciaActiva.Asientos = _servicio.ObtenerAsientos().ToList();
+                    _storageService.GuardarLibro(_instanciaActiva);
+                }
             }
         }
 
@@ -296,242 +517,222 @@ namespace App_Contable.Presentacion
         {
             if (dgvLibroDiario.CurrentRow?.Tag is not FilaLibroDiarioVisual fila || fila.NumeroAsiento <= 0)
             {
-                MessageBox.Show("Por favor seleccione una fila del asiento a eliminar.", "Información",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Por favor, seleccione un asiento para eliminar.",
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            var r = MessageBox.Show(
-                $"¿Eliminar el Asiento N° {fila.NumeroAsiento}?",
-                "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            var confirm = MessageBox.Show(
+                $"¿Está seguro de eliminar el Asiento N° {fila.NumeroAsiento}?",
+                "Confirmar Eliminación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
 
-            if (r == DialogResult.Yes && _servicio.EliminarAsiento(fila.NumeroAsiento))
+            if (confirm == DialogResult.Yes)
+            {
+                _servicio.EliminarAsiento(fila.NumeroAsiento);
                 CargarDatos();
-        }
-
-        private void btnEditarAsiento_Click(object? sender, EventArgs e)
-        {
-            if (dgvLibroDiario.CurrentRow?.Tag is not FilaLibroDiarioVisual fila || fila.NumeroAsiento <= 0)
-            {
-                MessageBox.Show("Por favor seleccione una fila del asiento a editar.", "Información",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            var asiento = _servicio.ObtenerAsientos().FirstOrDefault(a => a.NumeroAsiento == fila.NumeroAsiento);
-            if (asiento != null)
-            {
-                using var dlg = new frmAgregarAsiento(asiento);
-                if (dlg.ShowDialog(this) == DialogResult.OK) CargarDatos();
+                if (_instanciaActiva != null)
+                {
+                    _instanciaActiva.Asientos = _servicio.ObtenerAsientos().ToList();
+                    _storageService.GuardarLibro(_instanciaActiva);
+                }
             }
         }
 
         private void btnSubirAsiento_Click(object? sender, EventArgs e)
         {
-            if (dgvLibroDiario.CurrentRow?.Tag is not FilaLibroDiarioVisual fila || fila.NumeroAsiento <= 0) return;
-            _servicio.MoverAsientoArriba(fila.NumeroAsiento);
-            CargarDatos();
+            if (dgvLibroDiario.CurrentRow?.Tag is FilaLibroDiarioVisual fila && fila.NumeroAsiento > 0)
+            {
+                _servicio.MoverAsientoArriba(fila.NumeroAsiento);
+                CargarDatos();
+                if (_instanciaActiva != null)
+                {
+                    _instanciaActiva.Asientos = _servicio.ObtenerAsientos().ToList();
+                    _storageService.GuardarLibro(_instanciaActiva);
+                }
+            }
         }
 
         private void btnBajarAsiento_Click(object? sender, EventArgs e)
         {
-            if (dgvLibroDiario.CurrentRow?.Tag is not FilaLibroDiarioVisual fila || fila.NumeroAsiento <= 0) return;
-            _servicio.MoverAsientoAbajo(fila.NumeroAsiento);
-            CargarDatos();
+            if (dgvLibroDiario.CurrentRow?.Tag is FilaLibroDiarioVisual fila && fila.NumeroAsiento > 0)
+            {
+                _servicio.MoverAsientoAbajo(fila.NumeroAsiento);
+                CargarDatos();
+                if (_instanciaActiva != null)
+                {
+                    _instanciaActiva.Asientos = _servicio.ObtenerAsientos().ToList();
+                    _storageService.GuardarLibro(_instanciaActiva);
+                }
+            }
         }
 
         private void btnCargarEjemplo_Click(object? sender, EventArgs e)
         {
             _servicio.CargarAsientosEjemplo();
-            if (_enVistaGrilla) CargarDatos();
-            else RefrescarDashboard();
-            MessageBox.Show("Se han cargado los asientos de ejemplo.", "Libro Diario",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            CargarDatos();
+            if (_instanciaActiva != null)
+            {
+                _instanciaActiva.Asientos = _servicio.ObtenerAsientos().ToList();
+                _storageService.GuardarLibro(_instanciaActiva);
+            }
         }
 
         private void btnActualizar_Click(object? sender, EventArgs e) => CargarDatos();
 
-        private void btnFiltrar_Click(object? sender, EventArgs e)
-            => CargarDatos(dtpFechaInicio.Value.Date, dtpFechaFin.Value.Date);
-
-        // ── Métodos auxiliares del Dashboard ─────────────────────────
-        internal void FiltrarListaDash(string q)
-        {
-            var asientos = _servicio.ObtenerAsientos();
-            lstAsientos.Items.Clear();
-
-            var filtrados = string.IsNullOrWhiteSpace(q)
-                ? asientos
-                : asientos.Where(a =>
-                    a.Concepto.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                    a.NumeroAsiento.ToString().Contains(q)).ToList();
-
-            if (!filtrados.Any())
-            {
-                lstAsientos.Items.Add(new AsientoListItem { EsPlaceholder = true, Concepto = "No se encontraron resultados." });
-                return;
-            }
-
-            foreach (var a in filtrados.OrderByDescending(a => a.NumeroAsiento))
-                lstAsientos.Items.Add(AsientoAListItem(a));
-        }
-
-        internal void CargarEjemploYRefrescar()
-        {
-            _servicio.CargarAsientosEjemplo();
-            RefrescarDashboard();
-        }
-
-        internal void LimpiarAsientos()
-        {
-            var r = MessageBox.Show(
-                "¿Deseas eliminar TODOS los asientos de la sesión actual?\nEsta acción no se puede deshacer.",
-                "Confirmar limpieza", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (r == DialogResult.Yes)
-            {
-                _servicio.LimpiarTodos();
-                RefrescarDashboard();
-            }
-        }
+        private void btnFiltrar_Click(object? sender, EventArgs e) =>
+            CargarDatos(dtpFechaInicio.Value, dtpFechaFin.Value);
     }
 
     // ══════════════════════════════════════════════════════════════════
-    //  Modelo ligero para el ListBox del Dashboard
+    //  ITEM Y LISTBOX PERSONALIZADO DE INSTANCIAS DE LIBRO DIARIO
     // ══════════════════════════════════════════════════════════════════
-    internal class AsientoListItem
+
+    public class LibroDiarioListItem
     {
-        public int    Numero            { get; set; }
-        public string FechaTexto        { get; set; } = "";
-        public string Concepto          { get; set; } = "";
-        public string CuentasPrinc      { get; set; } = "";
-        public decimal TotalDebe        { get; set; }
-        public bool   EstaCuadrado      { get; set; }
-        public bool   EsEncabezadoGrupo { get; set; }
-        public bool   EsPlaceholder     { get; set; }
+        public LibroDiarioInstancia? Instancia { get; set; }
+        public string Titulo { get; set; } = string.Empty;
+        public string Subtitulo { get; set; } = string.Empty;
+        public string BadgeTexto { get; set; } = string.Empty;
+        public TipoDestinoLibro Destino { get; set; } = TipoDestinoLibro.Local;
+        public string FechaModTexto { get; set; } = string.Empty;
+        public decimal TotalDebe { get; set; }
+        public int CantidadAsientos { get; set; }
+        public bool EsEncabezadoGrupo { get; set; }
+        public bool EsPlaceholder { get; set; }
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    //  ListBox personalizado con diseño tipo Kardex
-    // ══════════════════════════════════════════════════════════════════
-    internal class AsientoListBox : ListBox
+    public class LibroDiarioInstanciaListBox : ListBox
     {
-        private static readonly Font _fntGrupo   = new("Segoe UI", 8f, FontStyle.Bold);
-        private static readonly Font _fntConcepto = new("Segoe UI Semibold", 9.5f, FontStyle.Bold);
-        private static readonly Font _fntSub      = new("Segoe UI", 8.5f);
-        private static readonly Font _fntFecha    = new("Segoe UI", 8f);
-        private static readonly Font _fntPlaceholder = new("Segoe UI", 9f, FontStyle.Italic);
+        private static readonly Font _fntTitulo = new("Segoe UI Semibold", 10.5f, FontStyle.Bold);
+        private static readonly Font _fntSub = new("Segoe UI", 8.5f);
+        private static readonly Font _fntBadge = new("Segoe UI", 8f, FontStyle.Regular);
+        private static readonly Font _fntFecha = new("Segoe UI", 8f);
+        private static readonly Font _fntMonto = new("Segoe UI Semibold", 9.5f, FontStyle.Bold);
+        private static readonly Font _fntGrupo = new("Segoe UI", 8.5f, FontStyle.Bold);
+        private static readonly Font _fntPlaceholder = new("Segoe UI", 9.5f, FontStyle.Italic);
 
-        public AsientoListBox()
+        public LibroDiarioInstanciaListBox()
         {
-            DrawMode      = DrawMode.OwnerDrawVariable;
-            BorderStyle   = BorderStyle.None;
-            BackColor     = Color.FromArgb(248, 250, 252);
-            ItemHeight    = 70;
-            SelectionMode = SelectionMode.One;
+            DrawMode = DrawMode.OwnerDrawVariable;
+            DoubleBuffered = true;
+            BorderStyle = BorderStyle.None;
+            ItemHeight = 74;
         }
 
         protected override void OnMeasureItem(MeasureItemEventArgs e)
         {
             if (e.Index < 0 || e.Index >= Items.Count) return;
-            var item = Items[e.Index] as AsientoListItem;
-            if (item == null) return;
-
-            e.ItemHeight = item.EsEncabezadoGrupo ? 28 : (item.EsPlaceholder ? 56 : 72);
+            if (Items[e.Index] is LibroDiarioListItem item && item.EsEncabezadoGrupo)
+                e.ItemHeight = 28;
+            else
+                e.ItemHeight = 74;
         }
 
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
             if (e.Index < 0 || e.Index >= Items.Count) return;
-            var item = Items[e.Index] as AsientoListItem;
-            if (item == null) return;
+            if (Items[e.Index] is not LibroDiarioListItem item) return;
 
-            var g      = e.Graphics;
+            var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             var bounds = e.Bounds;
 
-            // ── Encabezado de grupo (HOY / ANTERIORES) ────────────────
+            // 1. Encabezado de grupo ("HOY", "ANTERIORES", etc.)
             if (item.EsEncabezadoGrupo)
             {
-                g.FillRectangle(new SolidBrush(Color.FromArgb(241, 245, 249)), bounds);
-                g.DrawString(item.Concepto, _fntGrupo,
-                    new SolidBrush(Color.FromArgb(100, 116, 139)),
-                    bounds.X + 16, bounds.Y + 8);
+                using var brBg = new SolidBrush(Color.FromArgb(241, 245, 249));
+                g.FillRectangle(brBg, bounds);
+                using var brText = new SolidBrush(Color.FromArgb(100, 116, 139));
+                g.DrawString(item.Titulo, _fntGrupo, brText, bounds.X + 16, bounds.Y + 6);
 
                 using var penLine = new Pen(Color.FromArgb(226, 232, 240));
                 g.DrawLine(penLine, bounds.X, bounds.Bottom - 1, bounds.Right, bounds.Bottom - 1);
                 return;
             }
 
-            // ── Placeholder (sin asientos) ────────────────────────────
+            // 2. Placeholder cuando no hay items
             if (item.EsPlaceholder)
             {
                 g.FillRectangle(Brushes.White, bounds);
-                g.DrawString(item.Concepto, _fntPlaceholder,
-                    new SolidBrush(Color.FromArgb(148, 163, 184)),
-                    bounds.X + 20, bounds.Y + 18);
+                using var brText = new SolidBrush(Color.FromArgb(148, 163, 184));
+                g.DrawString(item.Titulo, _fntPlaceholder, brText, bounds.X + 20, bounds.Y + 16);
+                g.DrawString(item.Subtitulo, _fntSub, brText, bounds.X + 20, bounds.Y + 38);
                 return;
             }
 
-            // ── Item normal ───────────────────────────────────────────
+            // 3. Item normal de Libro Diario
             bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            Color bg = selected ? Color.FromArgb(224, 234, 250) : Color.White;
-            g.FillRectangle(new SolidBrush(bg), bounds);
-
-            // Borde izquierdo color según estado
-            Color accent = item.EstaCuadrado ? Color.FromArgb(37, 99, 235) : Color.FromArgb(220, 38, 38);
-            g.FillRectangle(new SolidBrush(accent), bounds.X, bounds.Y + 4, 4, bounds.Height - 8);
-
-            int x = bounds.X + 16;
-            int y = bounds.Y + 8;
-
-            // Concepto (negrita)
-            g.DrawString(item.Concepto, _fntConcepto,
-                new SolidBrush(Color.FromArgb(15, 23, 42)), x, y);
-            y += 20;
-
-            // Cuentas
-            if (!string.IsNullOrWhiteSpace(item.CuentasPrinc))
+            Color bg = selected ? Color.FromArgb(239, 246, 255) : Color.White;
+            using (var brBg = new SolidBrush(bg))
             {
-                g.DrawString(item.CuentasPrinc, _fntSub,
-                    new SolidBrush(Color.FromArgb(71, 85, 105)), x, y);
-                y += 16;
+                g.FillRectangle(brBg, bounds);
             }
 
-            // Fecha + monto
-            string monto = item.TotalDebe.ToString("C2");
-            g.DrawString($"Fecha: {item.FechaTexto}", _fntFecha,
-                new SolidBrush(Color.FromArgb(100, 116, 139)), x, y);
+            // Borde izquierdo azul corporativo
+            using (var brAccent = new SolidBrush(Color.FromArgb(37, 99, 235)))
+            {
+                g.FillRectangle(brAccent, bounds.X, bounds.Y + 4, 4, bounds.Height - 8);
+            }
 
-            // Badge cuadrado
-            string badge = item.EstaCuadrado ? "✓ Cuadrado" : "⚠ Descuadrado";
-            Color  badgeBg   = item.EstaCuadrado ? Color.FromArgb(220, 252, 231) : Color.FromArgb(254, 226, 226);
-            Color  badgeFg   = item.EstaCuadrado ? Color.FromArgb(22, 101, 52)   : Color.FromArgb(153, 27, 27);
-            var sz           = TextRenderer.MeasureText(badge, _fntFecha);
-            var badgeRect    = new Rectangle(bounds.Right - sz.Width - 28, bounds.Y + 10, sz.Width + 16, 20);
-            using var path   = RoundedRect(badgeRect, 6);
-            g.FillPath(new SolidBrush(badgeBg), path);
-            g.DrawString(badge, _fntFecha, new SolidBrush(badgeFg),
-                badgeRect.X + 6, badgeRect.Y + 3);
+            int x = bounds.X + 16;
+            int y = bounds.Y + 10;
 
-            // Total Debe (esquina inferior derecha)
-            g.DrawString(monto, _fntConcepto,
-                new SolidBrush(Color.FromArgb(30, 64, 175)),
-                bounds.Right - 100, bounds.Bottom - 22);
+            // Título del libro
+            using (var brTitulo = new SolidBrush(Color.FromArgb(15, 23, 42)))
+            {
+                g.DrawString(item.Titulo, _fntTitulo, brTitulo, x, y);
+            }
+            y += 22;
 
-            // Línea divisoria
-            using var pen = new Pen(Color.FromArgb(241, 245, 249));
-            g.DrawLine(pen, bounds.X + 16, bounds.Bottom - 1, bounds.Right - 16, bounds.Bottom - 1);
-        }
+            // Subtítulo (Empresa y Período)
+            using (var brSub = new SolidBrush(Color.FromArgb(71, 85, 105)))
+            {
+                g.DrawString(item.Subtitulo, _fntSub, brSub, x, y);
+            }
+            y += 18;
 
-        private static GraphicsPath RoundedRect(Rectangle r, int radius)
-        {
-            var path = new GraphicsPath();
-            path.AddArc(r.X, r.Y, radius * 2, radius * 2, 180, 90);
-            path.AddArc(r.Right - radius * 2, r.Y, radius * 2, radius * 2, 270, 90);
-            path.AddArc(r.Right - radius * 2, r.Bottom - radius * 2, radius * 2, radius * 2, 0, 90);
-            path.AddArc(r.X, r.Bottom - radius * 2, radius * 2, radius * 2, 90, 90);
-            path.CloseFigure();
-            return path;
+            // Badge de Destino ([Local] o [BD - Pendiente])
+            bool esLocal = item.Destino == TipoDestinoLibro.Local;
+            Color badgeBg = esLocal ? Color.FromArgb(241, 245, 249) : Color.FromArgb(239, 246, 255);
+            Color badgeBorder = esLocal ? Color.FromArgb(203, 213, 225) : Color.FromArgb(191, 219, 254);
+            Color badgeFg = esLocal ? Color.FromArgb(51, 65, 85) : Color.FromArgb(29, 78, 216);
+
+            var badgeSize = TextRenderer.MeasureText(item.BadgeTexto, _fntBadge);
+            var badgeRect = new Rectangle(x, y - 1, badgeSize.Width + 10, 18);
+
+            using (var brBdg = new SolidBrush(badgeBg))
+            using (var penBdg = new Pen(badgeBorder))
+            {
+                g.FillRectangle(brBdg, badgeRect);
+                g.DrawRectangle(penBdg, badgeRect.Left, badgeRect.Top, badgeRect.Width - 1, badgeRect.Height - 1);
+            }
+
+            using (var brFg = new SolidBrush(badgeFg))
+            {
+                g.DrawString(item.BadgeTexto, _fntBadge, brFg, badgeRect.X + 5, badgeRect.Y + 1);
+            }
+
+            // Fecha de última modificación
+            using (var brFecha = new SolidBrush(Color.FromArgb(148, 163, 184)))
+            {
+                g.DrawString(item.FechaModTexto, _fntFecha, brFecha, badgeRect.Right + 12, y + 1);
+            }
+
+            // Monto Total (Debe) en la esquina superior/media derecha
+            string montoTexto = item.TotalDebe > 0 ? item.TotalDebe.ToString("C2") : "$0.00";
+            using (var brMonto = new SolidBrush(Color.FromArgb(30, 64, 175)))
+            {
+                var szMonto = TextRenderer.MeasureText(montoTexto, _fntMonto);
+                g.DrawString(montoTexto, _fntMonto, brMonto, bounds.Right - szMonto.Width - 24, bounds.Y + 14);
+            }
+
+            // Línea divisoria inferior
+            using (var penDiv = new Pen(Color.FromArgb(241, 245, 249)))
+            {
+                g.DrawLine(penDiv, bounds.X + 16, bounds.Bottom - 1, bounds.Right - 16, bounds.Bottom - 1);
+            }
         }
     }
 }

@@ -74,85 +74,139 @@ namespace App_Contable.Logica
         }
 
         /// <summary>
-        /// Genera la lista de cuentas del Mayor con sus movimientos, tomando como fuente
-        /// los asientos registrados en el Libro Diario.
+        /// Genera la lista de cuentas del Mayor con sus movimientos a partir de una instancia de Libro Diario,
+        /// agrupando mediante LINQ por cuenta/subcuenta y calculando los saldos progresivos.
         /// </summary>
-        public List<CuentaMayor> GenerarMayor(DateTime? desde = null, DateTime? hasta = null)
+        public List<CuentaMayor> GenerarMayorDesdeLibro(LibroDiarioInstancia? libro, DateTime? desde = null, DateTime? hasta = null)
         {
-            var asientos = _libroDiario.ObtenerAsientos().AsEnumerable();
+            if (libro == null || libro.Asientos == null || !libro.Asientos.Any())
+                return new List<CuentaMayor>();
+
+            return GenerarMayorDesdeAsientos(libro.Asientos, desde, hasta);
+        }
+
+        /// <summary>
+        /// Procesa la colección de asientos contables mediante LINQ en memoria para estructurar las cuentas del Mayor.
+        /// </summary>
+        public List<CuentaMayor> GenerarMayorDesdeAsientos(IEnumerable<AsientoContable> asientosFuente, DateTime? desde = null, DateTime? hasta = null)
+        {
+            var asientos = asientosFuente.AsEnumerable();
 
             if (desde.HasValue)
                 asientos = asientos.Where(a => a.Fecha.Date >= desde.Value.Date);
             if (hasta.HasValue)
                 asientos = asientos.Where(a => a.Fecha.Date <= hasta.Value.Date);
 
-            var asientosFiltrados = asientos.OrderBy(a => a.NumeroAsiento).ToList();
-
-            // Agrupar movimientos por cuenta principal + subcuenta
-            var agrupaciones = new Dictionary<string, CuentaMayor>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var asiento in asientosFiltrados)
-            {
-                foreach (var mov in asiento.Movimientos)
+            // a) Extraer la totalidad de movimientos de todos los asientos del libro
+            var movimientosPlanos = asientos
+                .OrderBy(a => a.Fecha)
+                .ThenBy(a => a.NumeroAsiento)
+                .SelectMany(a => a.Movimientos.Select(m => new
                 {
-                    // Clave de agrupación: si tiene subcuenta, agrupamos por subcuenta
-                    string clave = string.IsNullOrWhiteSpace(mov.Subcuenta)
-                        ? mov.CuentaPrincipal
-                        : $"{mov.CuentaPrincipal}|{mov.Subcuenta}";
+                    Asiento = a,
+                    Movimiento = m,
+                    CuentaPrincipal = m.CuentaPrincipal.Trim(),
+                    Subcuenta = string.IsNullOrWhiteSpace(m.Subcuenta) ? null : m.Subcuenta.Trim(),
+                    ClaveAgrupacion = string.IsNullOrWhiteSpace(m.Subcuenta)
+                        ? m.CuentaPrincipal.Trim()
+                        : $"{m.CuentaPrincipal.Trim()} › {m.Subcuenta.Trim()}"
+                }))
+                .ToList();
 
-                    if (!agrupaciones.TryGetValue(clave, out var cuentaMayor))
+            // b) Agrupar mediante LINQ los movimientos por el nombre o clave completa de la cuenta
+            var grupos = movimientosPlanos
+                .GroupBy(x => x.ClaveAgrupacion, StringComparer.OrdinalIgnoreCase);
+
+            var listaCuentas = new List<CuentaMayor>();
+
+            foreach (var grupo in grupos)
+            {
+                var primerElemento = grupo.First();
+                var cuentaMayor = new CuentaMayor
+                {
+                    NombreCuenta = primerElemento.CuentaPrincipal,
+                    NombreSubcuenta = primerElemento.Subcuenta,
+                    ClaveAgrupacion = grupo.Key
+                };
+
+                decimal debeAcumulado = 0m;
+                decimal haberAcumulado = 0m;
+
+                // c) Ordenar los renglones cronológicamente por fecha y partida (Partida N° 1, 2, 3...)
+                var movsOrdenados = grupo
+                    .OrderBy(x => x.Asiento.Fecha)
+                    .ThenBy(x => x.Asiento.NumeroAsiento)
+                    .ToList();
+
+                foreach (var item in movsOrdenados)
+                {
+                    decimal debeMov = item.Movimiento.Debe;
+                    decimal haberMov = item.Movimiento.Haber;
+
+                    debeAcumulado += debeMov;
+                    haberAcumulado += haberMov;
+
+                    // Calcular saldo progresivo en cada fila
+                    decimal saldoProgresivo = debeAcumulado - haberAcumulado;
+                    string naturalezaFila = saldoProgresivo >= 0 ? "D" : "A";
+
+                    cuentaMayor.Movimientos.Add(new FilaMayorizacionVisual
                     {
-                        cuentaMayor = new CuentaMayor
-                        {
-                            NombreCuenta = mov.CuentaPrincipal,
-                            NombreSubcuenta = string.IsNullOrWhiteSpace(mov.Subcuenta) ? null : mov.Subcuenta,
-                            ClaveAgrupacion = clave
-                        };
-                        agrupaciones[clave] = cuentaMayor;
-                    }
-
-                    cuentaMayor.TotalDebe += mov.Debe;
-                    cuentaMayor.TotalHaber += mov.Haber;
-
-                    // Calcular saldo acumulado hasta este movimiento
-                    decimal saldoAcum = cuentaMayor.TotalDebe - cuentaMayor.TotalHaber;
-
-                    var fila = new FilaMayorizacionVisual
-                    {
-                        Fecha = asiento.Fecha.ToString("dd/MM/yyyy"),
-                        NumeroAsiento = asiento.NumeroAsiento,
-                        Concepto = asiento.Concepto,
-                        Debe = mov.Movimiento == TipoMovimiento.Debe ? mov.Monto : (decimal?)null,
-                        Haber = mov.Movimiento == TipoMovimiento.Haber ? mov.Monto : (decimal?)null,
-                        Saldo = Math.Abs(saldoAcum),
-                        NaturalezaSaldo = saldoAcum >= 0 ? "D" : "A"
-                    };
-
-                    cuentaMayor.Movimientos.Add(fila);
+                        Fecha = item.Asiento.Fecha.ToString("dd/MM/yyyy"),
+                        NumeroAsiento = item.Asiento.NumeroAsiento,
+                        Concepto = item.Asiento.Concepto,
+                        Debe = debeMov > 0 ? debeMov : (decimal?)null,
+                        Haber = haberMov > 0 ? haberMov : (decimal?)null,
+                        Saldo = Math.Abs(saldoProgresivo),
+                        NaturalezaSaldo = naturalezaFila
+                    });
                 }
+
+                // d) Asignar sumas finales del Debe y Haber
+                cuentaMayor.TotalDebe = debeAcumulado;
+                cuentaMayor.TotalHaber = haberAcumulado;
+
+                listaCuentas.Add(cuentaMayor);
             }
 
             // Ordenar cuentas según el catálogo oficial
-            var cuentasOrdenadas = agrupaciones.Values
+            return listaCuentas
                 .OrderBy(c => ObtenerOrdenCuenta(c.NombreCuenta))
                 .ThenBy(c => c.NombreSubcuenta ?? string.Empty)
                 .ToList();
+        }
 
-            return cuentasOrdenadas;
+        /// <summary>
+        /// Sobrecarga para compatibilidad: obtiene los asientos del servicio singleton activo.
+        /// </summary>
+        public List<CuentaMayor> GenerarMayor(DateTime? desde = null, DateTime? hasta = null)
+        {
+            var libroTemporal = new LibroDiarioInstancia
+            {
+                Nombre = "Libro Diario General",
+                Asientos = _libroDiario.ObtenerAsientos().ToList()
+            };
+            return GenerarMayorDesdeLibro(libroTemporal, desde, hasta);
         }
 
         /// <summary>
         /// Genera las filas formateadas para la grilla continua del Libro Mayor (estilo Libro Diario)
-        /// con encabezado de cuenta, detalle de movimientos, total por cuenta, separadores y sumas iguales.
+        /// a partir de una instancia de Libro Diario.
         /// </summary>
-        public List<FilaMayorTablaVisual> GenerarFilasVisualesTabla(DateTime? desde = null, DateTime? hasta = null, string? filtroCuenta = null)
+        public List<FilaMayorTablaVisual> GenerarFilasVisualesTablaDesdeLibro(
+            LibroDiarioInstancia? libro,
+            DateTime? desde = null,
+            DateTime? hasta = null,
+            string? filtroCuenta = null)
         {
-            var cuentas = GenerarMayor(desde, hasta);
+            var cuentas = GenerarMayorDesdeLibro(libro, desde, hasta);
 
             if (!string.IsNullOrWhiteSpace(filtroCuenta) && !filtroCuenta.Equals("Todas las Cuentas", StringComparison.OrdinalIgnoreCase))
             {
                 cuentas = cuentas.Where(c => c.NombreCuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase) ||
-                                             (!string.IsNullOrEmpty(c.NombreSubcuenta) && c.NombreSubcuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase)))
+                                             (!string.IsNullOrEmpty(c.NombreSubcuenta) && c.NombreSubcuenta.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase)) ||
+                                             c.ClaveAgrupacion.Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase) ||
+                                             $"{c.NombreCuenta} › {c.NombreSubcuenta}".Equals(filtroCuenta, StringComparison.OrdinalIgnoreCase))
                                  .ToList();
             }
 
@@ -199,7 +253,7 @@ namespace App_Contable.Logica
                     });
                 }
 
-                // 3. Fila de Total de la Cuenta
+                // 3. Fila de Total de la Cuenta (TOTAL [CUENTA])
                 resultado.Add(new FilaMayorTablaVisual
                 {
                     Fecha = string.Empty,
@@ -219,7 +273,7 @@ namespace App_Contable.Logica
                 });
             }
 
-            // 5. Fila Final de Sumas Iguales Globales (Exactamente como en Libro Diario)
+            // 5. Fila Final de Sumas Iguales Globales
             if (cuentas.Any())
             {
                 resultado.Add(new FilaMayorTablaVisual
@@ -236,6 +290,19 @@ namespace App_Contable.Logica
             }
 
             return resultado;
+        }
+
+        /// <summary>
+        /// Sobrecarga para compatibilidad: genera las filas visuales desde el libro general activo.
+        /// </summary>
+        public List<FilaMayorTablaVisual> GenerarFilasVisualesTabla(DateTime? desde = null, DateTime? hasta = null, string? filtroCuenta = null)
+        {
+            var libroTemporal = new LibroDiarioInstancia
+            {
+                Nombre = "Libro Diario General",
+                Asientos = _libroDiario.ObtenerAsientos().ToList()
+            };
+            return GenerarFilasVisualesTablaDesdeLibro(libroTemporal, desde, hasta, filtroCuenta);
         }
 
         private int ObtenerOrdenCuenta(string nombre)
