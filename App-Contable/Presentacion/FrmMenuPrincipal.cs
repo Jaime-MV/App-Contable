@@ -7,7 +7,7 @@ using App_Contable.Datos;
 
 namespace App_Contable.Presentacion
 {
-    public partial class FrmMenuPrincipal : Form
+    public partial class FrmMenuPrincipal : Form, INavegacionPrincipal
     {
         private Form? _formularioActivo = null;
         private Button? _botonSeleccionado = null;
@@ -257,17 +257,19 @@ namespace App_Contable.Presentacion
         private void btnLibroMayor_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnLibroMayor, "Mayorización");
-            AbrirFormularioEnPanel(new frmMayorizacion());
+            AbrirFormularioEnPanel(new frmInicioMayorizacion());
         }
 
         private void btnBalanceGeneral_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnBalanceGeneral, "Balance General");
+            AbrirFormularioEnPanel(new frmBalanceGeneral());
         }
 
         private void btnEstadoResultados_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnEstadoResultados, "Estado de Resultados");
+            AbrirFormularioEnPanel(new frmEstadoResultados());
         }
 
         private void btnKardex_Click(object sender, EventArgs e)
@@ -279,11 +281,13 @@ namespace App_Contable.Presentacion
         private void btnBalanzaComprobacion_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnBalanzaComprobacion, "Balanza de Comprobación");
+            AbrirFormularioEnPanel(new frmBalanzaComprobacion());
         }
 
         private void btnCatalogoCuentas_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnCatalogoCuentas, "Catálogo de Cuentas");
+            AbrirFormularioEnPanel(new frmCatalogoCuentas());
         }
 
         #endregion
