@@ -189,8 +189,8 @@ namespace App_Contable.Presentacion
                              $"• Período Contable: {libro.TextoPeriodo}\n" +
                              $"• Cantidad de Asientos: {libro.Asientos.Count}\n" +
                              $"• Destino Almacenamiento: {libro.TextoBadgeDestino}\n" +
-                             $"• Sumatoria Total Debe: {libro.TotalDebe:C2}\n" +
-                             $"• Sumatoria Total Haber: {libro.TotalHaber:C2}\n" +
+                             $"• Sumatoria Total Debe: {libro.TotalDebe.ToString("$#,##0.00", System.Globalization.CultureInfo.GetCultureInfo("en-US"))}\n" +
+                             $"• Sumatoria Total Haber: {libro.TotalHaber.ToString("$#,##0.00", System.Globalization.CultureInfo.GetCultureInfo("en-US"))}\n" +
                              $"• Estado de Cuadre: {estadoTexto}\n\n" +
                              $"¿Deseas abrir la mayorización completa de este libro?";
 

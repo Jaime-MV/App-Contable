@@ -721,7 +721,7 @@ namespace App_Contable.Presentacion
             }
 
             // Monto Total (Debe) en la esquina superior/media derecha
-            string montoTexto = item.TotalDebe > 0 ? item.TotalDebe.ToString("C2") : "$0.00";
+            string montoTexto = item.TotalDebe > 0 ? item.TotalDebe.ToString("$#,##0.00", System.Globalization.CultureInfo.GetCultureInfo("en-US")) : "$0.00";
             using (var brMonto = new SolidBrush(Color.FromArgb(30, 64, 175)))
             {
                 var szMonto = TextRenderer.MeasureText(montoTexto, _fntMonto);

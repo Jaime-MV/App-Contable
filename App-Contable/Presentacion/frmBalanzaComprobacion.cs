@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using App_Contable.Logica;
 using App_Contable.Modelos;
@@ -9,14 +11,25 @@ namespace App_Contable.Presentacion
 {
     public partial class frmBalanzaComprobacion : Form
     {
+        private static readonly CultureInfo UsCulture = new("en-US");
         private readonly BalanzaComprobacionServicio _servicio = BalanzaComprobacionServicio.Instancia;
-        private bool _modoEjemplo = false;
+        private LibroDiarioInstancia? _libroActual = null;
 
         public frmBalanzaComprobacion()
         {
             InitializeComponent();
             ConfigurarFormulario();
-            CargarDatos(usarEjemplo: false);
+            ActualizarVisibilidad();
+        }
+
+        public frmBalanzaComprobacion(LibroDiarioInstancia libro)
+        {
+            InitializeComponent();
+            ConfigurarFormulario();
+            _libroActual = libro;
+            dtpFechaInicio.Value = libro.FechaInicio;
+            dtpFechaFin.Value = libro.FechaFin;
+            CargarDatos();
         }
 
         // ──────────────────────────────────────────────────────────────
@@ -36,23 +49,19 @@ namespace App_Contable.Presentacion
             dgvBalanza.DoubleBuffered(true);
 
             foreach (DataGridViewColumn col in dgvBalanza.Columns)
+            {
                 col.SortMode = DataGridViewColumnSortMode.NotSortable;
+            }
 
-            // Estilo visual de la grilla
             AplicarEstiloGrilla();
 
-            // Suscripciones
-            dtpFechaInicio.ValueChanged += (s, e) => { if (!_modoEjemplo) CargarDatos(false); };
-            dtpFechaFin.ValueChanged    += (s, e) => { if (!_modoEjemplo) CargarDatos(false); };
+            // Centrar el panel de estado vacío dinámicamente
+            pnlEstadoVacio.Resize += (s, e) => CentrarCardVacio();
+            CentrarCardVacio();
 
-            LibroDiarioServicio.Instancia.DatosModificados += OnDatosModificados;
-            this.FormClosed += (s, e) => LibroDiarioServicio.Instancia.DatosModificados -= OnDatosModificados;
-
-            this.VisibleChanged += (s, e) =>
-            {
-                if (this.Visible && !_modoEjemplo)
-                    CargarDatos(false);
-            };
+            // Suscripciones a eventos
+            dtpFechaInicio.ValueChanged += (s, e) => { if (_libroActual != null) CargarDatos(); };
+            dtpFechaFin.ValueChanged += (s, e) => { if (_libroActual != null) CargarDatos(); };
 
             pnlToolbar.Paint += (s, e) =>
             {
@@ -67,84 +76,140 @@ namespace App_Contable.Presentacion
             };
         }
 
+        private void CentrarCardVacio()
+        {
+            if (pnlEstadoVacio.ClientSize.Width > 0 && pnlEstadoVacio.ClientSize.Height > 0)
+            {
+                int x = Math.Max(10, (pnlEstadoVacio.ClientSize.Width - pnlCardVacio.Width) / 2);
+                int y = Math.Max(20, (pnlEstadoVacio.ClientSize.Height - pnlCardVacio.Height) / 2);
+                pnlCardVacio.Location = new Point(x, y);
+            }
+        }
+
         private void AplicarEstiloGrilla()
         {
-            // Encabezado de columnas
-            dgvBalanza.ColumnHeadersDefaultCellStyle.BackColor      = Color.FromArgb(189, 215, 238);
-            dgvBalanza.ColumnHeadersDefaultCellStyle.ForeColor      = Color.FromArgb(15, 23, 42);
-            dgvBalanza.ColumnHeadersDefaultCellStyle.Font           = new Font("Segoe UI", 10f, FontStyle.Regular);
-            dgvBalanza.ColumnHeadersDefaultCellStyle.SelectionBackColor = Color.FromArgb(189, 215, 238);
+            // Encabezado de columnas (Celeste pastel suave unificado)
+            dgvBalanza.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(201, 218, 236);
+            dgvBalanza.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
+            dgvBalanza.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
+            dgvBalanza.ColumnHeadersDefaultCellStyle.SelectionBackColor = Color.FromArgb(201, 218, 236);
             dgvBalanza.ColumnHeadersDefaultCellStyle.SelectionForeColor = Color.FromArgb(15, 23, 42);
-            dgvBalanza.ColumnHeadersDefaultCellStyle.WrapMode       = DataGridViewTriState.True;
+            dgvBalanza.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
             dgvBalanza.EnableHeadersVisualStyles = false;
 
             // Celdas normales
-            dgvBalanza.DefaultCellStyle.BackColor     = Color.White;
-            dgvBalanza.DefaultCellStyle.ForeColor     = Color.FromArgb(30, 41, 59);
-            dgvBalanza.DefaultCellStyle.Font          = new Font("Segoe UI", 9.5f);
-            dgvBalanza.DefaultCellStyle.SelectionBackColor = Color.FromArgb(224, 234, 245);
+            dgvBalanza.DefaultCellStyle.BackColor = Color.White;
+            dgvBalanza.DefaultCellStyle.ForeColor = Color.FromArgb(30, 41, 59);
+            dgvBalanza.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+            dgvBalanza.DefaultCellStyle.SelectionBackColor = Color.FromArgb(239, 246, 255);
             dgvBalanza.DefaultCellStyle.SelectionForeColor = Color.FromArgb(15, 23, 42);
 
-            dgvBalanza.GridColor      = Color.FromArgb(203, 213, 225);
+            dgvBalanza.GridColor = Color.FromArgb(203, 213, 225);
             dgvBalanza.BackgroundColor = Color.White;
             dgvBalanza.CellBorderStyle = DataGridViewCellBorderStyle.Single;
-            dgvBalanza.ColumnHeadersHeight = 36;
-            dgvBalanza.RowTemplate.Height  = 28;
+            dgvBalanza.ColumnHeadersHeight = 42;
+            dgvBalanza.RowTemplate.Height = 28;
 
             // Eventos de pintado fila a fila
-            dgvBalanza.RowPrePaint  += Dgv_RowPrePaint;
-            dgvBalanza.CellPainting += Dgv_CellPainting;
+            dgvBalanza.RowPrePaint += Dgv_RowPrePaint;
         }
 
         // ──────────────────────────────────────────────────────────────
-        //  Carga de datos
+        //  Alternancia de visibilidad entre Placeholder y Grilla
         // ──────────────────────────────────────────────────────────────
-        private void OnDatosModificados()
+        private void ActualizarVisibilidad()
         {
-            if (!_modoEjemplo && IsHandleCreated && !IsDisposed)
-                BeginInvoke(new Action(() => CargarDatos(false)));
-        }
+            bool hayLibroCargado = _libroActual != null;
 
-        public void CargarDatos(bool usarEjemplo)
-        {
-            _modoEjemplo = usarEjemplo;
+            pnlEstadoVacio.Visible = !hayLibroCargado;
+            dgvBalanza.Visible = hayLibroCargado;
+            pnlFooter.Visible = hayLibroCargado;
 
-            List<FilaBalanzaComprobacion> filas;
-            ResumenBalanzaComprobacion resumen;
-
-            if (_modoEjemplo)
+            if (hayLibroCargado)
             {
-                (filas, resumen) = _servicio.ObtenerDatosEjemplo();
-                btnCalcularMayor.BackColor = Color.White;
-                btnCalcularMayor.ForeColor = Color.FromArgb(71, 85, 105);
-                btnCargarEjemplo.BackColor = Color.FromArgb(241, 245, 249);
-                btnCargarEjemplo.ForeColor = Color.FromArgb(30, 41, 59);
+                lblTituloSeccion.Text = $"BALANZA — {_libroActual!.Nombre}";
+                dgvBalanza.BringToFront();
             }
             else
             {
-                (filas, resumen) = _servicio.GenerarBalanza(dtpFechaInicio.Value.Date, dtpFechaFin.Value.Date);
-                btnCalcularMayor.BackColor = Color.FromArgb(220, 252, 231);
-                btnCalcularMayor.ForeColor = Color.FromArgb(22, 101, 52);
-                btnCargarEjemplo.BackColor = Color.White;
-                btnCargarEjemplo.ForeColor = Color.FromArgb(71, 85, 105);
+                lblTituloSeccion.Text = "BALANZA DE COMPROBACIÓN";
+                pnlEstadoVacio.BringToFront();
+                CentrarCardVacio();
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        //  Carga de datos y renderizado
+        // ──────────────────────────────────────────────────────────────
+        public void CargarDatos()
+        {
+            if (_libroActual == null)
+            {
+                ActualizarVisibilidad();
+                return;
             }
 
-            PoblarGrilla(filas);
+            ActualizarVisibilidad();
+
+            var (filas, resumen) = _servicio.GenerarBalanzaDesdeLibro(
+                _libroActual,
+                dtpFechaInicio.Value.Date,
+                dtpFechaFin.Value.Date);
+
+            PoblarGrilla(filas, resumen);
             ActualizarResumen(resumen);
         }
 
-        private void PoblarGrilla(List<FilaBalanzaComprobacion> filas)
+        private void PoblarGrilla(List<FilaBalanzaComprobacion> filas, ResumenBalanzaComprobacion resumen)
         {
             dgvBalanza.Rows.Clear();
 
             foreach (var fila in filas)
             {
-                string debe  = fila.TotalDebe  > 0 ? fila.TotalDebe.ToString("N2")  : string.Empty;
-                string haber = fila.TotalHaber > 0 ? fila.TotalHaber.ToString("N2") : string.Empty;
+                string movDebe = fila.MovimientoDebe > 0 ? fila.MovimientoDebe.ToString("$#,##0.00", UsCulture) : "—";
+                string movHaber = fila.MovimientoHaber > 0 ? fila.MovimientoHaber.ToString("$#,##0.00", UsCulture) : "—";
+                string salDeudor = fila.SaldoDeudor > 0 ? fila.SaldoDeudor.ToString("$#,##0.00", UsCulture) : "—";
+                string salAcreedor = fila.SaldoAcreedor > 0 ? fila.SaldoAcreedor.ToString("$#,##0.00", UsCulture) : "—";
 
-                int idx = dgvBalanza.Rows.Add(fila.Cuenta, debe, haber);
+                int idx = dgvBalanza.Rows.Add(
+                    fila.Codigo,
+                    fila.Cuenta,
+                    movDebe,
+                    movHaber,
+                    salDeudor,
+                    salAcreedor
+                );
+
                 dgvBalanza.Rows[idx].Tag = fila;
             }
+
+            // Fila de Sumas Iguales / Totales
+            if (filas.Any())
+            {
+                var filaTotales = new FilaBalanzaComprobacion
+                {
+                    Codigo = string.Empty,
+                    Cuenta = "SUMAS IGUALES TOTALES",
+                    MovimientoDebe = resumen.TotalMovimientoDebe,
+                    MovimientoHaber = resumen.TotalMovimientoHaber,
+                    SaldoDeudor = resumen.TotalSaldoDeudor,
+                    SaldoAcreedor = resumen.TotalSaldoAcreedor,
+                    EsFila_Total = true
+                };
+
+                int idxTot = dgvBalanza.Rows.Add(
+                    string.Empty,
+                    "SUMAS IGUALES TOTALES",
+                    resumen.TotalMovimientoDebe.ToString("$#,##0.00", UsCulture),
+                    resumen.TotalMovimientoHaber.ToString("$#,##0.00", UsCulture),
+                    resumen.TotalSaldoDeudor.ToString("$#,##0.00", UsCulture),
+                    resumen.TotalSaldoAcreedor.ToString("$#,##0.00", UsCulture)
+                );
+
+                dgvBalanza.Rows[idxTot].Tag = filaTotales;
+            }
+
+            dgvBalanza.ClearSelection();
         }
 
         // ──────────────────────────────────────────────────────────────
@@ -159,59 +224,60 @@ namespace App_Contable.Presentacion
 
             if (fila.EsFila_Total)
             {
-                // Fila de Totales — fondo verde como en Excel
-                row.DefaultCellStyle.BackColor = Color.FromArgb(169, 208, 142);
-                row.DefaultCellStyle.Font      = new Font("Segoe UI", 10f, FontStyle.Bold);
+                // Fila de Totales / Sumas Iguales
+                row.DefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
+                row.DefaultCellStyle.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
                 row.DefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
-                row.Height = 30;
+                row.Height = 32;
             }
             else
             {
-                // Filas normales — fondo blanco con fuente normal
                 row.DefaultCellStyle.BackColor = Color.White;
-                row.DefaultCellStyle.Font      = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+                row.DefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Regular);
                 row.DefaultCellStyle.ForeColor = Color.FromArgb(30, 41, 59);
                 row.Height = 28;
             }
         }
 
-        private void Dgv_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
-        {
-            // Pintar la columna Cuenta con bold si la fila es de totales
-            if (e.RowIndex < 0 || e.ColumnIndex != colCuenta.Index || e.Graphics is null) return;
-            var row = dgvBalanza.Rows[e.RowIndex];
-            if (row.Tag is FilaBalanzaComprobacion { EsFila_Total: true })
-            {
-                e.PaintBackground(e.ClipBounds, true);
-                using var boldFont = new Font("Segoe UI", 10.5f, FontStyle.Bold);
-                TextRenderer.DrawText(e.Graphics, e.FormattedValue?.ToString() ?? string.Empty,
-                    boldFont, e.CellBounds,
-                    Color.FromArgb(15, 23, 42),
-                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.LeftAndRightPadding);
-                e.Handled = true;
-            }
-        }
-
         // ──────────────────────────────────────────────────────────────
-        //  Panel de resumen inferior
+        //  Panel de resumen inferior con doble validación de cuadre
         // ──────────────────────────────────────────────────────────────
         private void ActualizarResumen(ResumenBalanzaComprobacion resumen)
         {
-            lblTotalCuentas.Text = $"Total Cuentas: {resumen.TotalCuentas}";
-            lblTotalDebe.Text    = $"Total Debe: ${resumen.TotalDebe:N2}";
-            lblTotalHaber.Text   = $"Total Haber: ${resumen.TotalHaber:N2}";
+            lblTotalCuentas.Text = $"Cuentas: {resumen.TotalCuentas}";
+            lblTotalMovDebe.Text = $"Mov. Debe: {resumen.TotalMovimientoDebe.ToString("$#,##0.00", UsCulture)}";
+            lblTotalMovHaber.Text = $"Mov. Haber: {resumen.TotalMovimientoHaber.ToString("$#,##0.00", UsCulture)}";
+            lblTotalSaldoDeudor.Text = $"Saldo Deudor: {resumen.TotalSaldoDeudor.ToString("$#,##0.00", UsCulture)}";
+            lblTotalSaldoAcreedor.Text = $"Saldo Acreedor: {resumen.TotalSaldoAcreedor.ToString("$#,##0.00", UsCulture)}";
 
-            string origen = _modoEjemplo ? "(Datos de Prueba)" : "(Automático desde Asientos / Mayor)";
-
-            if (resumen.EstaBalanceada)
+            if (resumen.EstaBalanceada && resumen.TotalCuentas > 0)
             {
-                lblBadgeEstado.Text      = $"✓ Balanza Cuadrada {origen}";
+                lblBadgeEstado.Text = "✓ Balanza Cuadrada";
                 lblBadgeEstado.ForeColor = Color.FromArgb(22, 163, 74);
+            }
+            else if (resumen.TotalCuentas == 0)
+            {
+                lblBadgeEstado.Text = "ℹ Sin movimientos en el período";
+                lblBadgeEstado.ForeColor = Color.FromArgb(100, 116, 139);
             }
             else
             {
-                decimal diff = Math.Abs(resumen.TotalDebe - resumen.TotalHaber);
-                lblBadgeEstado.Text      = $"⚠ Diferencia: ${diff:N2} {origen}";
+                decimal diffMov = resumen.DiferenciaMovimientos;
+                decimal diffSal = resumen.DiferenciaSaldos;
+
+                if (diffMov > 0 && diffSal > 0)
+                {
+                    lblBadgeEstado.Text = $"⚠ Descuadre (Mov: {diffMov.ToString("$#,##0.00", UsCulture)} | Saldos: {diffSal.ToString("$#,##0.00", UsCulture)})";
+                }
+                else if (diffMov > 0)
+                {
+                    lblBadgeEstado.Text = $"⚠ Descuadre en Movimientos ({diffMov.ToString("$#,##0.00", UsCulture)})";
+                }
+                else
+                {
+                    lblBadgeEstado.Text = $"⚠ Descuadre en Saldos ({diffSal.ToString("$#,##0.00", UsCulture)})";
+                }
+
                 lblBadgeEstado.ForeColor = Color.FromArgb(220, 38, 38);
             }
         }
@@ -219,9 +285,37 @@ namespace App_Contable.Presentacion
         // ──────────────────────────────────────────────────────────────
         //  Eventos de botones
         // ──────────────────────────────────────────────────────────────
-        private void btnCargarEjemplo_Click(object sender, EventArgs e) => CargarDatos(true);
-        private void btnCalcularMayor_Click(object sender, EventArgs e) => CargarDatos(false);
-        private void btnActualizar_Click(object sender, EventArgs e)    => CargarDatos(_modoEjemplo);
-        private void btnFiltrar_Click(object sender, EventArgs e)       => CargarDatos(false);
+        private void btnCargarDesdeLibro_Click(object sender, EventArgs e)
+        {
+            using var modal = new frmSeleccionarLibroDiarioModal();
+            if (modal.ShowDialog(this) == DialogResult.OK && modal.LibroSeleccionado != null)
+            {
+                _libroActual = modal.LibroSeleccionado;
+                dtpFechaInicio.Value = _libroActual.FechaInicio;
+                dtpFechaFin.Value = _libroActual.FechaFin;
+                CargarDatos();
+            }
+        }
+
+        private void btnActualizar_Click(object sender, EventArgs e)
+        {
+            if (_libroActual != null)
+            {
+                CargarDatos();
+            }
+            else
+            {
+                btnCargarDesdeLibro_Click(sender, e);
+            }
+        }
+
+        private void btnFiltrar_Click(object sender, EventArgs e)
+        {
+            if (_libroActual != null)
+            {
+                CargarDatos();
+            }
+        }
     }
 }
+
