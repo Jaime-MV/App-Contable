@@ -26,6 +26,12 @@ namespace App_Contable.Logica
 
         public IReadOnlyList<AsientoContable> ObtenerAsientos() => _asientos.OrderBy(a => a.NumeroAsiento).ToList();
 
+        public void LimpiarTodos()
+        {
+            _asientos.Clear();
+            NotificarCambios();
+        }
+
         public int ObtenerSiguienteNumero()
         {
             return _asientos.Any() ? _asientos.Max(a => a.NumeroAsiento) + 1 : 1;

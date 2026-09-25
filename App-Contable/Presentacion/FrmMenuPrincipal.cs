@@ -269,6 +269,7 @@ namespace App_Contable.Presentacion
         private void btnEstadoResultados_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnEstadoResultados, "Estado de Resultados");
+            AbrirFormularioEnPanel(new frmEstadoResultados());
         }
 
         private void btnKardex_Click(object sender, EventArgs e)
@@ -280,11 +281,13 @@ namespace App_Contable.Presentacion
         private void btnBalanzaComprobacion_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnBalanzaComprobacion, "Balanza de Comprobación");
+            AbrirFormularioEnPanel(new frmBalanzaComprobacion());
         }
 
         private void btnCatalogoCuentas_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnCatalogoCuentas, "Catálogo de Cuentas");
+            AbrirFormularioEnPanel(new frmCatalogoCuentas());
         }
 
         #endregion
