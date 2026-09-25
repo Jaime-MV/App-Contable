@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Linq;
 using System.Windows.Forms;
+using App_Contable.Datos;
 using App_Contable.Logica;
 using App_Contable.Modelos;
 
@@ -13,15 +14,29 @@ namespace App_Contable.Presentacion
 {
     public partial class frmKardex : Form
     {
-        // Origen de datos en memoria (BindingList sin llamadas a base de datos)
+        // Origen de datos en memoria (BindingList)
         private readonly BindingList<KardexItem> _movimientosBase = new();
         private List<KardexItem> _movimientosVisualizados = new();
         private ResumenConciliacionKardex _resumenActual = new();
+        private TarjetaKardex? _tarjetaActual;
+        private readonly frmInicioKardex? _frmInicio;
+        private readonly KardexStorageService _storageService = new();
 
-        public frmKardex()
+        // Bandera de control de cambios (isDirty)
+        private bool hayCambiosPendientes = false;
+
+        public frmKardex() : this(null, null)
+        {
+        }
+
+        public frmKardex(TarjetaKardex? tarjeta, frmInicioKardex? frmInicio = null)
         {
             InitializeComponent();
+            _tarjetaActual = tarjeta;
+            _frmInicio = frmInicio;
+
             ConfigurarFormulario();
+            InicializarBarraSuperior();
             InicializarEstado();
         }
 
@@ -32,8 +47,8 @@ namespace App_Contable.Presentacion
 
             // Rango de fechas por defecto
             var hoy = new DateTime(2026, 9, 1);
-            dtpFechaInicio.Value = new DateTime(hoy.Year, hoy.Month, 1);
-            dtpFechaFin.Value = new DateTime(hoy.Year, hoy.Month, DateTime.DaysInMonth(hoy.Year, hoy.Month));
+            dtpDesde.Value = new DateTime(hoy.Year, hoy.Month, 1);
+            dtpHasta.Value = new DateTime(hoy.Year, hoy.Month, DateTime.DaysInMonth(hoy.Year, hoy.Month));
 
             // Configuración de la grilla contable tradicional
             dgvKardex.AutoGenerateColumns = false;
@@ -54,18 +69,117 @@ namespace App_Contable.Presentacion
             dgvKardex.Scroll += (s, e) => dgvKardex.Invalidate();
             dgvKardex.ColumnWidthChanged += (s, e) => dgvKardex.Invalidate();
             dgvKardex.Resize += (s, e) => dgvKardex.Invalidate();
+
+            ActualizarTitulos();
+        }
+
+        /// <summary>
+        /// Configura la maquetación y márgenes de los contenedores FlowLayoutPanel en la barra superior.
+        /// Garantiza una sola línea horizontal uniforme sin saltos ni desniveles entre etiquetas, pickers y botones.
+        /// </summary>
+        public void InicializarBarraSuperior()
+        {
+            // Contenedor principal de 56px de alto
+            pnlBarraHerramientas.Dock = DockStyle.Top;
+            pnlBarraHerramientas.Height = 56;
+            pnlBarraHerramientas.BackColor = Color.White;
+            pnlBarraHerramientas.Padding = new Padding(16, 10, 16, 10);
+
+            // 1. Bloque izquierdo
+            pnlIzquierda.Dock = DockStyle.Left;
+            pnlIzquierda.AutoSize = true;
+            pnlIzquierda.FlowDirection = FlowDirection.LeftToRight;
+            pnlIzquierda.WrapContents = false;
+            pnlIzquierda.BackColor = Color.Transparent;
+
+            btnVolver.Size = new Size(85, 34);
+            btnVolver.Margin = new Padding(0, 0, 8, 0);
+
+            btnGuardar.Size = new Size(85, 34);
+            btnGuardar.Margin = new Padding(0, 0, 16, 0);
+
+            lblNombreTarjeta.AutoSize = true;
+            lblNombreTarjeta.Font = new Font("Segoe UI", 11.5f, FontStyle.Bold);
+            lblNombreTarjeta.ForeColor = Color.FromArgb(15, 23, 42);
+            lblNombreTarjeta.Margin = new Padding(0, 6, 0, 0); // Ajuste de línea base con botones
+
+            // 2. Bloque derecho
+            pnlDerecha.Dock = DockStyle.Right;
+            pnlDerecha.AutoSize = true;
+            pnlDerecha.FlowDirection = FlowDirection.LeftToRight;
+            pnlDerecha.WrapContents = false;
+            pnlDerecha.BackColor = Color.Transparent;
+
+            lblPeriodo.AutoSize = true;
+            lblPeriodo.Font = new Font("Segoe UI", 9f, FontStyle.Regular);
+            lblPeriodo.ForeColor = Color.FromArgb(71, 85, 105);
+            lblPeriodo.Margin = new Padding(0, 7, 6, 0);
+
+            dtpDesde.Size = new Size(105, 32);
+            dtpDesde.Margin = new Padding(0, 1, 0, 1);
+
+            lblSeparador.AutoSize = true;
+            lblSeparador.Font = new Font("Segoe UI", 9f, FontStyle.Regular);
+            lblSeparador.ForeColor = Color.FromArgb(148, 163, 184);
+            lblSeparador.Margin = new Padding(4, 7, 4, 0);
+
+            dtpHasta.Size = new Size(105, 32);
+            dtpHasta.Margin = new Padding(0, 1, 0, 1);
+
+            btnFiltrar.Size = new Size(70, 32);
+            btnFiltrar.Margin = new Padding(8, 1, 0, 1);
+
+            btnCargarEjemplo.AutoSize = true;
+            btnCargarEjemplo.Height = 32;
+            btnCargarEjemplo.Margin = new Padding(6, 1, 0, 1);
+
+            btnEditar.AutoSize = true;
+            btnEditar.Height = 32;
+            btnEditar.Margin = new Padding(6, 1, 0, 1);
+
+            btnEliminar.Size = new Size(38, 32);
+            btnEliminar.Margin = new Padding(6, 1, 0, 1);
+
+            btnNuevoMovimiento.Size = new Size(90, 32);
+            btnNuevoMovimiento.BackColor = Color.FromArgb(30, 96, 255);
+            btnNuevoMovimiento.ForeColor = Color.White;
+            btnNuevoMovimiento.Margin = new Padding(8, 1, 0, 1);
         }
 
         private void InicializarEstado()
         {
             _movimientosBase.Clear();
+
+            if (_tarjetaActual != null && _tarjetaActual.Movimientos.Count > 0)
+            {
+                foreach (var mov in _tarjetaActual.Movimientos)
+                {
+                    _movimientosBase.Add(mov);
+                }
+            }
+
+            hayCambiosPendientes = false;
             RecalcularYRefrescarGrilla();
+            ActualizarTitulos();
+        }
+
+        private void ActualizarTitulos()
+        {
+            string nombre = _tarjetaActual != null
+                ? (string.IsNullOrWhiteSpace(_tarjetaActual.CodigoArticulo)
+                    ? _tarjetaActual.Nombre.ToUpper()
+                    : $"{_tarjetaActual.Nombre.ToUpper()} [{_tarjetaActual.CodigoArticulo}]")
+                : "PRUEBA";
+
+            lblNombreTarjeta.Text = hayCambiosPendientes
+                ? $"KARDEX — {nombre} *"
+                : $"KARDEX — {nombre}";
         }
 
         private void RecalcularYRefrescarGrilla()
         {
-            var fechaInicio = dtpFechaInicio.Value.Date;
-            var fechaFin = dtpFechaFin.Value.Date;
+            var fechaInicio = dtpDesde.Value.Date;
+            var fechaFin = dtpHasta.Value.Date;
 
             var resultado = KardexCalculador.ProcesarKardex(_movimientosBase, fechaInicio, fechaFin);
             _movimientosVisualizados = resultado.ListaProcesada;
@@ -98,7 +212,7 @@ namespace App_Contable.Presentacion
                 // 1: Concepto
                 if (item.TipoMovimiento == TipoMovimientoKardex.Totales)
                 {
-                    row.Cells[1].Value = $"Período: {dtpFechaInicio.Value:dd/MM/yyyy} — {dtpFechaFin.Value:dd/MM/yyyy}";
+                    row.Cells[1].Value = $"Período: {dtpDesde.Value:dd/MM/yyyy} — {dtpHasta.Value:dd/MM/yyyy}";
                 }
                 else
                 {
@@ -177,7 +291,7 @@ namespace App_Contable.Presentacion
                 }
                 else
                 {
-                    lblBadgeEstado.Text = "✓ Valuado (Costo Promedio Ponderado)";
+                    lblBadgeEstado.Text = "✓ Valuado (PEPS / FIFO)";
                     lblBadgeEstado.ForeColor = Color.FromArgb(21, 128, 61);
                 }
             }
@@ -480,7 +594,119 @@ namespace App_Contable.Presentacion
 
         #endregion
 
-        #region Eventos de Botones de Acción (Nuevo, Editar, Eliminar, Reordenar, Cargar Ejemplo)
+        #region Control de Cambios (isDirty) y Flujo de Persistencia
+
+        /// <summary>
+        /// Guarda el estado actual de la tarjeta Kardex en el repositorio correspondiente.
+        /// </summary>
+        /// <param name="mostrarConfirmacion">Indica si se despliega un mensaje al usuario al completar.</param>
+        private void GuardarCambiosTarjeta(bool mostrarConfirmacion = false)
+        {
+            if (_tarjetaActual == null)
+            {
+                _tarjetaActual = new TarjetaKardex
+                {
+                    Nombre = "Inventario de Prueba",
+                    CodigoArticulo = "PRU-01",
+                    MetodoValuacion = "PEPS / FIFO (Primeras Entradas, Primeras Salidas)",
+                    OrigenAlmacenamiento = TipoAlmacenamientoKardex.EnMemoria
+                };
+            }
+
+            _tarjetaActual.Movimientos = _movimientosBase.ToList();
+            _tarjetaActual.StockActual = _resumenActual.SaldoFisicoFinal;
+            _tarjetaActual.CostoPromedioActual = _resumenActual.UltimoCostoPromedio;
+            _tarjetaActual.SaldoValorActual = _resumenActual.SaldoValorFinal;
+            _tarjetaActual.FechaModificacion = DateTime.Now;
+
+            _storageService.GuardarTarjetaLocal(_tarjetaActual);
+
+            hayCambiosPendientes = false;
+            ActualizarTitulos();
+
+            if (mostrarConfirmacion)
+            {
+                MessageBox.Show(
+                    $"Los cambios en la tarjeta Kardex '{_tarjetaActual.Nombre}' han sido guardados exitosamente.\n\n" +
+                    $"• Movimientos registrados: {_movimientosBase.Count}\n" +
+                    $"• Saldo en existencias: {_resumenActual.SaldoFisicoFinal:N0} unidades\n" +
+                    $"• Saldo monetario PEPS: ${_resumenActual.SaldoValorFinal:N2}",
+                    "Tarjeta Guardada",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>
+        /// Verifica si hay cambios pendientes y solicita confirmación al usuario antes de salir o cerrar.
+        /// </summary>
+        /// <returns>True si se permite continuar con el cierre/retorno; False para cancelar.</returns>
+        private bool ConfirmarSalidaConCambios()
+        {
+            if (!hayCambiosPendientes) return true;
+
+            var respuesta = MessageBox.Show(
+                "Tiene modificaciones sin guardar en esta tarjeta Kardex.\n\n" +
+                "• Seleccione [Sí] para Guardar y Salir.\n" +
+                "• Seleccione [No] para Salir sin Guardar (descartar cambios).\n" +
+                "• Seleccione [Cancelar] para permanecer en la pantalla actual sin perder información.",
+                "Cambios Pendientes de Guardar",
+                MessageBoxButtons.YesNoCancel,
+                MessageBoxIcon.Question);
+
+            if (respuesta == DialogResult.Yes)
+            {
+                GuardarCambiosTarjeta(mostrarConfirmacion: false);
+                return true;
+            }
+            else if (respuesta == DialogResult.No)
+            {
+                // Descartar modificaciones pendientes
+                hayCambiosPendientes = false;
+                return true;
+            }
+            else
+            {
+                // Cancelar navegación / cierre
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Eventos de Barra Superior e Interacción
+
+        private void btnGuardar_Click(object sender, EventArgs e)
+        {
+            GuardarCambiosTarjeta(mostrarConfirmacion: true);
+        }
+
+        private void btnVolver_Click(object sender, EventArgs e)
+        {
+            if (!ConfirmarSalidaConCambios())
+            {
+                return;
+            }
+
+            var formMenuPrincipal = FindForm() as FrmMenuPrincipal ?? ParentForm as FrmMenuPrincipal;
+            if (formMenuPrincipal != null)
+            {
+                var nuevoInicio = new frmInicioKardex();
+                formMenuPrincipal.AbrirFormularioEnPanel(nuevoInicio);
+            }
+            else
+            {
+                Close();
+            }
+        }
+
+        private void frmKardex_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!ConfirmarSalidaConCambios())
+            {
+                e.Cancel = true;
+            }
+        }
 
         private void btnNuevoMovimiento_Click(object sender, EventArgs e)
         {
@@ -488,15 +714,18 @@ namespace App_Contable.Presentacion
             decimal costoPromedio = _resumenActual.UltimoCostoPromedio;
             decimal saldoValorActual = _resumenActual.SaldoValorFinal;
 
-            using var formModal = new frmAgregarMovimientoKardex(stockActual, costoPromedio, saldoValorActual);
+            using var formModal = new frmAgregarMovimientoKardex(stockActual, costoPromedio, saldoValorActual, _movimientosBase);
             if (formModal.ShowDialog(this) == DialogResult.OK && formModal.MovimientoCreado != null)
             {
                 _movimientosBase.Add(formModal.MovimientoCreado);
                 RecalcularYRefrescarGrilla();
+
+                hayCambiosPendientes = true;
+                ActualizarTitulos();
             }
         }
 
-        private void btnEditarMovimiento_Click(object sender, EventArgs e)
+        private void btnEditar_Click(object sender, EventArgs e)
         {
             if (dgvKardex.CurrentRow?.Tag is not KardexItem item || item.EsFilaEspecial)
             {
@@ -515,7 +744,7 @@ namespace App_Contable.Presentacion
             decimal costoPromedio = _resumenActual.UltimoCostoPromedio;
             decimal saldoValorActual = _resumenActual.SaldoValorFinal;
 
-            using var formModal = new frmAgregarMovimientoKardex(itemExistente, stockActual, costoPromedio, saldoValorActual);
+            using var formModal = new frmAgregarMovimientoKardex(itemExistente, stockActual, costoPromedio, saldoValorActual, _movimientosBase);
             if (formModal.ShowDialog(this) == DialogResult.OK && formModal.MovimientoCreado != null)
             {
                 int index = _movimientosBase.IndexOf(itemExistente);
@@ -524,6 +753,9 @@ namespace App_Contable.Presentacion
                     _movimientosBase[index] = formModal.MovimientoCreado;
                 }
                 RecalcularYRefrescarGrilla();
+
+                hayCambiosPendientes = true;
+                ActualizarTitulos();
             }
         }
 
@@ -531,11 +763,11 @@ namespace App_Contable.Presentacion
         {
             if (e.RowIndex >= 0)
             {
-                btnEditarMovimiento_Click(this, EventArgs.Empty);
+                btnEditar_Click(this, EventArgs.Empty);
             }
         }
 
-        private void btnEliminarMovimiento_Click(object sender, EventArgs e)
+        private void btnEliminar_Click(object sender, EventArgs e)
         {
             if (dgvKardex.CurrentRow?.Tag is not KardexItem item || item.EsFilaEspecial)
             {
@@ -556,54 +788,10 @@ namespace App_Contable.Presentacion
                 {
                     _movimientosBase.Remove(itemAEliminar);
                     RecalcularYRefrescarGrilla();
-                    MessageBox.Show("Movimiento eliminado correctamente y saldos recalculados.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-        }
 
-        private void btnSubirMovimiento_Click(object sender, EventArgs e)
-        {
-            if (dgvKardex.CurrentRow?.Tag is not KardexItem item || item.EsFilaEspecial) return;
-
-            var itemObj = _movimientosBase.FirstOrDefault(m => m.Id == item.Id);
-            if (itemObj == null) return;
-
-            int index = _movimientosBase.IndexOf(itemObj);
-            if (index > 0)
-            {
-                _movimientosBase.RemoveAt(index);
-                _movimientosBase.Insert(index - 1, itemObj);
-                RecalcularYRefrescarGrilla();
-                SeleccionarFilaPorId(itemObj.Id);
-            }
-        }
-
-        private void btnBajarMovimiento_Click(object sender, EventArgs e)
-        {
-            if (dgvKardex.CurrentRow?.Tag is not KardexItem item || item.EsFilaEspecial) return;
-
-            var itemObj = _movimientosBase.FirstOrDefault(m => m.Id == item.Id);
-            if (itemObj == null) return;
-
-            int index = _movimientosBase.IndexOf(itemObj);
-            if (index >= 0 && index < _movimientosBase.Count - 1)
-            {
-                _movimientosBase.RemoveAt(index);
-                _movimientosBase.Insert(index + 1, itemObj);
-                RecalcularYRefrescarGrilla();
-                SeleccionarFilaPorId(itemObj.Id);
-            }
-        }
-
-        private void SeleccionarFilaPorId(long id)
-        {
-            foreach (DataGridViewRow row in dgvKardex.Rows)
-            {
-                if (row.Tag is KardexItem k && k.Id == id)
-                {
-                    row.Selected = true;
-                    dgvKardex.CurrentCell = row.Cells[0];
-                    break;
+                    hayCambiosPendientes = true;
+                    ActualizarTitulos();
+                    MessageBox.Show("Movimiento eliminado de la grilla. Recuerde guardar los cambios.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
@@ -617,7 +805,10 @@ namespace App_Contable.Presentacion
                 _movimientosBase.Add(d);
             }
             RecalcularYRefrescarGrilla();
-            MessageBox.Show("Se han cargado los movimientos de ejemplo en la Tarjeta Kardex.", "Datos Demo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            hayCambiosPendientes = true;
+            ActualizarTitulos();
+            MessageBox.Show("Se han cargado los movimientos de ejemplo en la grilla. Recuerde guardar los cambios.", "Datos Demo", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnFiltrar_Click(object sender, EventArgs e)
@@ -642,3 +833,4 @@ namespace App_Contable.Presentacion
         }
     }
 }
+

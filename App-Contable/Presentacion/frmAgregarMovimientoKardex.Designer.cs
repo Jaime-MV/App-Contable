@@ -91,7 +91,7 @@ namespace App_Contable.Presentacion
             this.lblSubtituloModal.Name = "lblSubtituloModal";
             this.lblSubtituloModal.Size = new System.Drawing.Size(430, 15);
             this.lblSubtituloModal.TabIndex = 1;
-            this.lblSubtituloModal.Text = "Captura manual con recálculo automático de Costo Promedio Ponderado";
+            this.lblSubtituloModal.Text = "Captura manual con asignación automática de capas PEPS / FIFO";
             // 
             // pnlContenido
             // 
@@ -328,7 +328,7 @@ namespace App_Contable.Presentacion
             this.lblNuevoCostoPromedio.Name = "lblNuevoCostoPromedio";
             this.lblNuevoCostoPromedio.Size = new System.Drawing.Size(326, 17);
             this.lblNuevoCostoPromedio.TabIndex = 3;
-            this.lblNuevoCostoPromedio.Text = "• Nuevo Costo Promedio Ponderado: $0.0000 / u";
+            this.lblNuevoCostoPromedio.Text = "• Asignación de Capas PEPS: $0.0000 / u";
             // 
             // pnlFooter
             // 

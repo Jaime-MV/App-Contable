@@ -30,19 +30,20 @@ namespace App_Contable.Presentacion
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.pnlToolbar = new System.Windows.Forms.Panel();
-            this.lblTituloSeccion = new System.Windows.Forms.Label();
-            this.pnlFiltroFechas = new System.Windows.Forms.Panel();
+            this.pnlBarraHerramientas = new System.Windows.Forms.Panel();
+            this.pnlIzquierda = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnVolver = new System.Windows.Forms.Button();
+            this.btnGuardar = new System.Windows.Forms.Button();
+            this.lblNombreTarjeta = new System.Windows.Forms.Label();
+            this.pnlDerecha = new System.Windows.Forms.FlowLayoutPanel();
             this.lblPeriodo = new System.Windows.Forms.Label();
-            this.dtpFechaInicio = new System.Windows.Forms.DateTimePicker();
-            this.lblFlechaRango = new System.Windows.Forms.Label();
-            this.dtpFechaFin = new System.Windows.Forms.DateTimePicker();
+            this.dtpDesde = new System.Windows.Forms.DateTimePicker();
+            this.lblSeparador = new System.Windows.Forms.Label();
+            this.dtpHasta = new System.Windows.Forms.DateTimePicker();
             this.btnFiltrar = new System.Windows.Forms.Button();
             this.btnCargarEjemplo = new System.Windows.Forms.Button();
-            this.btnSubirMovimiento = new System.Windows.Forms.Button();
-            this.btnBajarMovimiento = new System.Windows.Forms.Button();
-            this.btnEditarMovimiento = new System.Windows.Forms.Button();
-            this.btnEliminarMovimiento = new System.Windows.Forms.Button();
+            this.btnEditar = new System.Windows.Forms.Button();
+            this.btnEliminar = new System.Windows.Forms.Button();
             this.btnNuevoMovimiento = new System.Windows.Forms.Button();
             this.pnlGrillaContenedor = new System.Windows.Forms.Panel();
             this.dgvKardex = new System.Windows.Forms.DataGridView();
@@ -63,92 +64,149 @@ namespace App_Contable.Presentacion
             this.lblTotalSalidas = new System.Windows.Forms.Label();
             this.lblSaldoFinal = new System.Windows.Forms.Label();
             this.lblBadgeEstado = new System.Windows.Forms.Label();
-            this.pnlToolbar.SuspendLayout();
-            this.pnlFiltroFechas.SuspendLayout();
+            this.pnlBarraHerramientas.SuspendLayout();
+            this.pnlIzquierda.SuspendLayout();
+            this.pnlDerecha.SuspendLayout();
             this.pnlGrillaContenedor.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvKardex)).BeginInit();
             this.pnlResumenInferior.SuspendLayout();
             this.SuspendLayout();
             // 
-            // pnlToolbar
+            // pnlBarraHerramientas
             // 
-            this.pnlToolbar.BackColor = System.Drawing.Color.White;
-            this.pnlToolbar.Controls.Add(this.btnSubirMovimiento);
-            this.pnlToolbar.Controls.Add(this.btnBajarMovimiento);
-            this.pnlToolbar.Controls.Add(this.btnEditarMovimiento);
-            this.pnlToolbar.Controls.Add(this.btnCargarEjemplo);
-            this.pnlToolbar.Controls.Add(this.btnEliminarMovimiento);
-            this.pnlToolbar.Controls.Add(this.btnNuevoMovimiento);
-            this.pnlToolbar.Controls.Add(this.pnlFiltroFechas);
-            this.pnlToolbar.Controls.Add(this.lblTituloSeccion);
-            this.pnlToolbar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlToolbar.Location = new System.Drawing.Point(0, 0);
-            this.pnlToolbar.Name = "pnlToolbar";
-            this.pnlToolbar.Padding = new System.Windows.Forms.Padding(16, 12, 16, 12);
-            this.pnlToolbar.Size = new System.Drawing.Size(1200, 72);
-            this.pnlToolbar.TabIndex = 0;
+            this.pnlBarraHerramientas.BackColor = System.Drawing.Color.White;
+            this.pnlBarraHerramientas.Controls.Add(this.pnlIzquierda);
+            this.pnlBarraHerramientas.Controls.Add(this.pnlDerecha);
+            this.pnlBarraHerramientas.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlBarraHerramientas.Location = new System.Drawing.Point(0, 0);
+            this.pnlBarraHerramientas.Name = "pnlBarraHerramientas";
+            this.pnlBarraHerramientas.Padding = new System.Windows.Forms.Padding(16, 10, 16, 10);
+            this.pnlBarraHerramientas.Size = new System.Drawing.Size(1200, 56);
+            this.pnlBarraHerramientas.TabIndex = 0;
             // 
-            // lblTituloSeccion
+            // pnlIzquierda
             // 
-            this.lblTituloSeccion.AutoSize = true;
-            this.lblTituloSeccion.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.lblTituloSeccion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.lblTituloSeccion.Location = new System.Drawing.Point(16, 24);
-            this.lblTituloSeccion.Name = "lblTituloSeccion";
-            this.lblTituloSeccion.Size = new System.Drawing.Size(147, 21);
-            this.lblTituloSeccion.TabIndex = 0;
-            this.lblTituloSeccion.Text = "TARJETA KARDEX";
+            this.pnlIzquierda.AutoSize = true;
+            this.pnlIzquierda.Controls.Add(this.btnVolver);
+            this.pnlIzquierda.Controls.Add(this.btnGuardar);
+            this.pnlIzquierda.Controls.Add(this.lblNombreTarjeta);
+            this.pnlIzquierda.Dock = System.Windows.Forms.DockStyle.Left;
+            this.pnlIzquierda.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.pnlIzquierda.Location = new System.Drawing.Point(16, 10);
+            this.pnlIzquierda.Name = "pnlIzquierda";
+            this.pnlIzquierda.Size = new System.Drawing.Size(430, 36);
+            this.pnlIzquierda.TabIndex = 0;
+            this.pnlIzquierda.WrapContents = false;
             // 
-            // pnlFiltroFechas
+            // btnVolver
             // 
-            this.pnlFiltroFechas.Controls.Add(this.btnFiltrar);
-            this.pnlFiltroFechas.Controls.Add(this.dtpFechaFin);
-            this.pnlFiltroFechas.Controls.Add(this.lblFlechaRango);
-            this.pnlFiltroFechas.Controls.Add(this.dtpFechaInicio);
-            this.pnlFiltroFechas.Controls.Add(this.lblPeriodo);
-            this.pnlFiltroFechas.Location = new System.Drawing.Point(175, 16);
-            this.pnlFiltroFechas.Name = "pnlFiltroFechas";
-            this.pnlFiltroFechas.Size = new System.Drawing.Size(370, 38);
-            this.pnlFiltroFechas.TabIndex = 1;
+            this.btnVolver.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(250)))), ((int)(((byte)(252)))));
+            this.btnVolver.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnVolver.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
+            this.btnVolver.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnVolver.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.btnVolver.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
+            this.btnVolver.Location = new System.Drawing.Point(0, 0);
+            this.btnVolver.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+            this.btnVolver.Name = "btnVolver";
+            this.btnVolver.Size = new System.Drawing.Size(85, 34);
+            this.btnVolver.TabIndex = 0;
+            this.btnVolver.Text = "← Volver";
+            this.btnVolver.UseVisualStyleBackColor = false;
+            this.btnVolver.Click += new System.EventHandler(this.btnVolver_Click);
+            // 
+            // btnGuardar
+            // 
+            this.btnGuardar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnGuardar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnGuardar.FlatAppearance.BorderSize = 0;
+            this.btnGuardar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGuardar.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.btnGuardar.ForeColor = System.Drawing.Color.White;
+            this.btnGuardar.Location = new System.Drawing.Point(93, 0);
+            this.btnGuardar.Margin = new System.Windows.Forms.Padding(0, 0, 16, 0);
+            this.btnGuardar.Name = "btnGuardar";
+            this.btnGuardar.Size = new System.Drawing.Size(85, 34);
+            this.btnGuardar.TabIndex = 1;
+            this.btnGuardar.Text = "💾 Guardar";
+            this.btnGuardar.UseVisualStyleBackColor = false;
+            this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
+            // 
+            // lblNombreTarjeta
+            // 
+            this.lblNombreTarjeta.AutoSize = true;
+            this.lblNombreTarjeta.Font = new System.Drawing.Font("Segoe UI", 11.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblNombreTarjeta.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            this.lblNombreTarjeta.Location = new System.Drawing.Point(194, 6);
+            this.lblNombreTarjeta.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.lblNombreTarjeta.Name = "lblNombreTarjeta";
+            this.lblNombreTarjeta.Size = new System.Drawing.Size(155, 21);
+            this.lblNombreTarjeta.TabIndex = 2;
+            this.lblNombreTarjeta.Text = "KARDEX — PRUEBA";
+            // 
+            // pnlDerecha
+            // 
+            this.pnlDerecha.AutoSize = true;
+            this.pnlDerecha.Controls.Add(this.lblPeriodo);
+            this.pnlDerecha.Controls.Add(this.dtpDesde);
+            this.pnlDerecha.Controls.Add(this.lblSeparador);
+            this.pnlDerecha.Controls.Add(this.dtpHasta);
+            this.pnlDerecha.Controls.Add(this.btnFiltrar);
+            this.pnlDerecha.Controls.Add(this.btnCargarEjemplo);
+            this.pnlDerecha.Controls.Add(this.btnEditar);
+            this.pnlDerecha.Controls.Add(this.btnEliminar);
+            this.pnlDerecha.Controls.Add(this.btnNuevoMovimiento);
+            this.pnlDerecha.Dock = System.Windows.Forms.DockStyle.Right;
+            this.pnlDerecha.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.pnlDerecha.Location = new System.Drawing.Point(474, 10);
+            this.pnlDerecha.Name = "pnlDerecha";
+            this.pnlDerecha.Size = new System.Drawing.Size(710, 36);
+            this.pnlDerecha.TabIndex = 1;
+            this.pnlDerecha.WrapContents = false;
             // 
             // lblPeriodo
             // 
             this.lblPeriodo.AutoSize = true;
             this.lblPeriodo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.lblPeriodo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.lblPeriodo.Location = new System.Drawing.Point(3, 11);
+            this.lblPeriodo.Location = new System.Drawing.Point(0, 7);
+            this.lblPeriodo.Margin = new System.Windows.Forms.Padding(0, 7, 6, 0);
             this.lblPeriodo.Name = "lblPeriodo";
             this.lblPeriodo.Size = new System.Drawing.Size(51, 15);
             this.lblPeriodo.TabIndex = 0;
             this.lblPeriodo.Text = "Período:";
             // 
-            // dtpFechaInicio
+            // dtpDesde
             // 
-            this.dtpFechaInicio.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.dtpFechaInicio.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpFechaInicio.Location = new System.Drawing.Point(58, 8);
-            this.dtpFechaInicio.Name = "dtpFechaInicio";
-            this.dtpFechaInicio.Size = new System.Drawing.Size(100, 23);
-            this.dtpFechaInicio.TabIndex = 1;
+            this.dtpDesde.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.dtpDesde.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.dtpDesde.Location = new System.Drawing.Point(57, 1);
+            this.dtpDesde.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.dtpDesde.Name = "dtpDesde";
+            this.dtpDesde.Size = new System.Drawing.Size(105, 32);
+            this.dtpDesde.TabIndex = 1;
             // 
-            // lblFlechaRango
+            // lblSeparador
             // 
-            this.lblFlechaRango.AutoSize = true;
-            this.lblFlechaRango.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(148)))), ((int)(((byte)(163)))), ((int)(((byte)(184)))));
-            this.lblFlechaRango.Location = new System.Drawing.Point(164, 11);
-            this.lblFlechaRango.Name = "lblFlechaRango";
-            this.lblFlechaRango.Size = new System.Drawing.Size(12, 15);
-            this.lblFlechaRango.TabIndex = 2;
-            this.lblFlechaRango.Text = "-";
+            this.lblSeparador.AutoSize = true;
+            this.lblSeparador.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.lblSeparador.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(148)))), ((int)(((byte)(163)))), ((int)(((byte)(184)))));
+            this.lblSeparador.Location = new System.Drawing.Point(166, 7);
+            this.lblSeparador.Margin = new System.Windows.Forms.Padding(4, 7, 4, 0);
+            this.lblSeparador.Name = "lblSeparador";
+            this.lblSeparador.Size = new System.Drawing.Size(12, 15);
+            this.lblSeparador.TabIndex = 2;
+            this.lblSeparador.Text = "-";
             // 
-            // dtpFechaFin
+            // dtpHasta
             // 
-            this.dtpFechaFin.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.dtpFechaFin.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.dtpFechaFin.Location = new System.Drawing.Point(182, 8);
-            this.dtpFechaFin.Name = "dtpFechaFin";
-            this.dtpFechaFin.Size = new System.Drawing.Size(100, 23);
-            this.dtpFechaFin.TabIndex = 3;
+            this.dtpHasta.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.dtpHasta.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.dtpHasta.Location = new System.Drawing.Point(182, 1);
+            this.dtpHasta.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.dtpHasta.Name = "dtpHasta";
+            this.dtpHasta.Size = new System.Drawing.Size(105, 32);
+            this.dtpHasta.TabIndex = 3;
             // 
             // btnFiltrar
             // 
@@ -158,9 +216,10 @@ namespace App_Contable.Presentacion
             this.btnFiltrar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnFiltrar.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.btnFiltrar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
-            this.btnFiltrar.Location = new System.Drawing.Point(290, 7);
+            this.btnFiltrar.Location = new System.Drawing.Point(295, 1);
+            this.btnFiltrar.Margin = new System.Windows.Forms.Padding(8, 1, 0, 1);
             this.btnFiltrar.Name = "btnFiltrar";
-            this.btnFiltrar.Size = new System.Drawing.Size(70, 25);
+            this.btnFiltrar.Size = new System.Drawing.Size(70, 32);
             this.btnFiltrar.TabIndex = 4;
             this.btnFiltrar.Text = "Filtrar";
             this.btnFiltrar.UseVisualStyleBackColor = false;
@@ -168,103 +227,71 @@ namespace App_Contable.Presentacion
             // 
             // btnCargarEjemplo
             // 
-            this.btnCargarEjemplo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCargarEjemplo.AutoSize = true;
             this.btnCargarEjemplo.BackColor = System.Drawing.Color.White;
             this.btnCargarEjemplo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnCargarEjemplo.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
             this.btnCargarEjemplo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCargarEjemplo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.btnCargarEjemplo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.btnCargarEjemplo.Location = new System.Drawing.Point(620, 18);
+            this.btnCargarEjemplo.Location = new System.Drawing.Point(371, 1);
+            this.btnCargarEjemplo.Margin = new System.Windows.Forms.Padding(6, 1, 0, 1);
             this.btnCargarEjemplo.Name = "btnCargarEjemplo";
-            this.btnCargarEjemplo.Size = new System.Drawing.Size(125, 36);
-            this.btnCargarEjemplo.TabIndex = 4;
+            this.btnCargarEjemplo.Size = new System.Drawing.Size(120, 32);
+            this.btnCargarEjemplo.TabIndex = 5;
             this.btnCargarEjemplo.Text = "↺ Cargar Ejemplo";
             this.btnCargarEjemplo.UseVisualStyleBackColor = false;
             this.btnCargarEjemplo.Click += new System.EventHandler(this.btnCargarEjemplo_Click);
             // 
-            // btnSubirMovimiento
+            // btnEditar
             // 
-            this.btnSubirMovimiento.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSubirMovimiento.BackColor = System.Drawing.Color.White;
-            this.btnSubirMovimiento.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnSubirMovimiento.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnSubirMovimiento.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSubirMovimiento.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnSubirMovimiento.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.btnSubirMovimiento.Location = new System.Drawing.Point(755, 18);
-            this.btnSubirMovimiento.Name = "btnSubirMovimiento";
-            this.btnSubirMovimiento.Size = new System.Drawing.Size(45, 36);
-            this.btnSubirMovimiento.TabIndex = 8;
-            this.btnSubirMovimiento.Text = "⬆️";
-            this.btnSubirMovimiento.UseVisualStyleBackColor = false;
-            this.btnSubirMovimiento.Click += new System.EventHandler(this.btnSubirMovimiento_Click);
+            this.btnEditar.AutoSize = true;
+            this.btnEditar.BackColor = System.Drawing.Color.White;
+            this.btnEditar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnEditar.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
+            this.btnEditar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnEditar.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.btnEditar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
+            this.btnEditar.Location = new System.Drawing.Point(497, 1);
+            this.btnEditar.Margin = new System.Windows.Forms.Padding(6, 1, 0, 1);
+            this.btnEditar.Name = "btnEditar";
+            this.btnEditar.Size = new System.Drawing.Size(76, 32);
+            this.btnEditar.TabIndex = 6;
+            this.btnEditar.Text = "✏️ Editar";
+            this.btnEditar.UseVisualStyleBackColor = false;
+            this.btnEditar.Click += new System.EventHandler(this.btnEditar_Click);
             // 
-            // btnBajarMovimiento
+            // btnEliminar
             // 
-            this.btnBajarMovimiento.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBajarMovimiento.BackColor = System.Drawing.Color.White;
-            this.btnBajarMovimiento.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnBajarMovimiento.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnBajarMovimiento.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBajarMovimiento.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnBajarMovimiento.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.btnBajarMovimiento.Location = new System.Drawing.Point(805, 18);
-            this.btnBajarMovimiento.Name = "btnBajarMovimiento";
-            this.btnBajarMovimiento.Size = new System.Drawing.Size(45, 36);
-            this.btnBajarMovimiento.TabIndex = 7;
-            this.btnBajarMovimiento.Text = "⬇️";
-            this.btnBajarMovimiento.UseVisualStyleBackColor = false;
-            this.btnBajarMovimiento.Click += new System.EventHandler(this.btnBajarMovimiento_Click);
-            // 
-            // btnEditarMovimiento
-            // 
-            this.btnEditarMovimiento.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEditarMovimiento.BackColor = System.Drawing.Color.White;
-            this.btnEditarMovimiento.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnEditarMovimiento.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnEditarMovimiento.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnEditarMovimiento.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnEditarMovimiento.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.btnEditarMovimiento.Location = new System.Drawing.Point(855, 18);
-            this.btnEditarMovimiento.Name = "btnEditarMovimiento";
-            this.btnEditarMovimiento.Size = new System.Drawing.Size(100, 36);
-            this.btnEditarMovimiento.TabIndex = 6;
-            this.btnEditarMovimiento.Text = "✏️ Editar";
-            this.btnEditarMovimiento.UseVisualStyleBackColor = false;
-            this.btnEditarMovimiento.Click += new System.EventHandler(this.btnEditarMovimiento_Click);
-            // 
-            // btnEliminarMovimiento
-            // 
-            this.btnEliminarMovimiento.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEliminarMovimiento.BackColor = System.Drawing.Color.White;
-            this.btnEliminarMovimiento.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnEliminarMovimiento.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(239)))), ((int)(((byte)(68)))), ((int)(((byte)(68)))));
-            this.btnEliminarMovimiento.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnEliminarMovimiento.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnEliminarMovimiento.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
-            this.btnEliminarMovimiento.Location = new System.Drawing.Point(960, 18);
-            this.btnEliminarMovimiento.Name = "btnEliminarMovimiento";
-            this.btnEliminarMovimiento.Size = new System.Drawing.Size(100, 36);
-            this.btnEliminarMovimiento.TabIndex = 3;
-            this.btnEliminarMovimiento.Text = "🗑️ Eliminar";
-            this.btnEliminarMovimiento.UseVisualStyleBackColor = false;
-            this.btnEliminarMovimiento.Click += new System.EventHandler(this.btnEliminarMovimiento_Click);
+            this.btnEliminar.BackColor = System.Drawing.Color.White;
+            this.btnEliminar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnEliminar.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(239)))), ((int)(((byte)(68)))), ((int)(((byte)(68)))));
+            this.btnEliminar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnEliminar.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.btnEliminar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
+            this.btnEliminar.Location = new System.Drawing.Point(579, 1);
+            this.btnEliminar.Margin = new System.Windows.Forms.Padding(6, 1, 0, 1);
+            this.btnEliminar.Name = "btnEliminar";
+            this.btnEliminar.Size = new System.Drawing.Size(38, 32);
+            this.btnEliminar.TabIndex = 7;
+            this.btnEliminar.Text = "🗑️";
+            this.btnEliminar.UseVisualStyleBackColor = false;
+            this.btnEliminar.Click += new System.EventHandler(this.btnEliminar_Click);
             // 
             // btnNuevoMovimiento
             // 
-            this.btnNuevoMovimiento.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnNuevoMovimiento.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
+            this.btnNuevoMovimiento.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(96)))), ((int)(((byte)(255)))));
             this.btnNuevoMovimiento.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnNuevoMovimiento.FlatAppearance.BorderSize = 0;
             this.btnNuevoMovimiento.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNuevoMovimiento.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.btnNuevoMovimiento.ForeColor = System.Drawing.Color.White;
-            this.btnNuevoMovimiento.Location = new System.Drawing.Point(1065, 18);
+            this.btnNuevoMovimiento.Location = new System.Drawing.Point(623, 1);
+            this.btnNuevoMovimiento.Margin = new System.Windows.Forms.Padding(8, 1, 0, 1);
             this.btnNuevoMovimiento.Name = "btnNuevoMovimiento";
-            this.btnNuevoMovimiento.Size = new System.Drawing.Size(115, 36);
-            this.btnNuevoMovimiento.TabIndex = 2;
-            this.btnNuevoMovimiento.Text = "➕ Nuevo";
+            this.btnNuevoMovimiento.Size = new System.Drawing.Size(90, 32);
+            this.btnNuevoMovimiento.TabIndex = 8;
+            this.btnNuevoMovimiento.Text = "+ Nuevo";
             this.btnNuevoMovimiento.UseVisualStyleBackColor = false;
             this.btnNuevoMovimiento.Click += new System.EventHandler(this.btnNuevoMovimiento_Click);
             // 
@@ -273,10 +300,10 @@ namespace App_Contable.Presentacion
             this.pnlGrillaContenedor.BackColor = System.Drawing.Color.White;
             this.pnlGrillaContenedor.Controls.Add(this.dgvKardex);
             this.pnlGrillaContenedor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlGrillaContenedor.Location = new System.Drawing.Point(0, 72);
+            this.pnlGrillaContenedor.Location = new System.Drawing.Point(0, 56);
             this.pnlGrillaContenedor.Name = "pnlGrillaContenedor";
             this.pnlGrillaContenedor.Padding = new System.Windows.Forms.Padding(16, 8, 16, 8);
-            this.pnlGrillaContenedor.Size = new System.Drawing.Size(1200, 520);
+            this.pnlGrillaContenedor.Size = new System.Drawing.Size(1200, 536);
             this.pnlGrillaContenedor.TabIndex = 1;
             // 
             // dgvKardex
@@ -329,7 +356,7 @@ namespace App_Contable.Presentacion
             this.dgvKardex.RowHeadersWidth = 24;
             this.dgvKardex.RowTemplate.Height = 28;
             this.dgvKardex.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvKardex.Size = new System.Drawing.Size(1168, 504);
+            this.dgvKardex.Size = new System.Drawing.Size(1168, 520);
             this.dgvKardex.TabIndex = 0;
             // 
             // colFecha
@@ -491,7 +518,7 @@ namespace App_Contable.Presentacion
             this.lblBadgeEstado.Name = "lblBadgeEstado";
             this.lblBadgeEstado.Size = new System.Drawing.Size(255, 17);
             this.lblBadgeEstado.TabIndex = 4;
-            this.lblBadgeEstado.Text = "✓ Valuado (Costo Promedio Ponderado)";
+            this.lblBadgeEstado.Text = "✓ Valuado (PEPS / FIFO)";
             // 
             // frmKardex
             // 
@@ -501,15 +528,18 @@ namespace App_Contable.Presentacion
             this.ClientSize = new System.Drawing.Size(1200, 640);
             this.Controls.Add(this.pnlGrillaContenedor);
             this.Controls.Add(this.pnlResumenInferior);
-            this.Controls.Add(this.pnlToolbar);
+            this.Controls.Add(this.pnlBarraHerramientas);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "frmKardex";
             this.Text = "Tarjeta Kardex";
-            this.pnlToolbar.ResumeLayout(false);
-            this.pnlToolbar.PerformLayout();
-            this.pnlFiltroFechas.ResumeLayout(false);
-            this.pnlFiltroFechas.PerformLayout();
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmKardex_FormClosing);
+            this.pnlBarraHerramientas.ResumeLayout(false);
+            this.pnlBarraHerramientas.PerformLayout();
+            this.pnlIzquierda.ResumeLayout(false);
+            this.pnlIzquierda.PerformLayout();
+            this.pnlDerecha.ResumeLayout(false);
+            this.pnlDerecha.PerformLayout();
             this.pnlGrillaContenedor.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvKardex)).EndInit();
             this.pnlResumenInferior.ResumeLayout(false);
@@ -519,19 +549,20 @@ namespace App_Contable.Presentacion
 
         #endregion
 
-        private System.Windows.Forms.Panel pnlToolbar;
-        private System.Windows.Forms.Label lblTituloSeccion;
-        private System.Windows.Forms.Panel pnlFiltroFechas;
+        private System.Windows.Forms.Panel pnlBarraHerramientas;
+        private System.Windows.Forms.FlowLayoutPanel pnlIzquierda;
+        private System.Windows.Forms.Button btnVolver;
+        private System.Windows.Forms.Button btnGuardar;
+        private System.Windows.Forms.Label lblNombreTarjeta;
+        private System.Windows.Forms.FlowLayoutPanel pnlDerecha;
         private System.Windows.Forms.Label lblPeriodo;
-        private System.Windows.Forms.DateTimePicker dtpFechaInicio;
-        private System.Windows.Forms.Label lblFlechaRango;
-        private System.Windows.Forms.DateTimePicker dtpFechaFin;
+        private System.Windows.Forms.DateTimePicker dtpDesde;
+        private System.Windows.Forms.Label lblSeparador;
+        private System.Windows.Forms.DateTimePicker dtpHasta;
         private System.Windows.Forms.Button btnFiltrar;
         private System.Windows.Forms.Button btnCargarEjemplo;
-        private System.Windows.Forms.Button btnSubirMovimiento;
-        private System.Windows.Forms.Button btnBajarMovimiento;
-        private System.Windows.Forms.Button btnEditarMovimiento;
-        private System.Windows.Forms.Button btnEliminarMovimiento;
+        private System.Windows.Forms.Button btnEditar;
+        private System.Windows.Forms.Button btnEliminar;
         private System.Windows.Forms.Button btnNuevoMovimiento;
         private System.Windows.Forms.Panel pnlGrillaContenedor;
         private System.Windows.Forms.DataGridView dgvKardex;
