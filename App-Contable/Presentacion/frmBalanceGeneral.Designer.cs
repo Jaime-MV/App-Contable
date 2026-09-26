@@ -19,6 +19,7 @@ namespace App_Contable.Presentacion
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            this.btnVolver = new System.Windows.Forms.Button();
             this.pnlToolbar = new System.Windows.Forms.Panel();
             this.lblTituloSeccion = new System.Windows.Forms.Label();
             this.pnlFiltroFechas = new System.Windows.Forms.Panel();
@@ -52,6 +53,7 @@ namespace App_Contable.Presentacion
             this.pnlToolbar.Controls.Add(this.btnCargarEjemplo);
             this.pnlToolbar.Controls.Add(this.pnlFiltroFechas);
             this.pnlToolbar.Controls.Add(this.lblTituloSeccion);
+            this.pnlToolbar.Controls.Add(this.btnVolver);
             this.pnlToolbar.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlToolbar.Location = new System.Drawing.Point(0, 0);
             this.pnlToolbar.Name = "pnlToolbar";
@@ -59,11 +61,26 @@ namespace App_Contable.Presentacion
             this.pnlToolbar.Size = new System.Drawing.Size(1100, 72);
             this.pnlToolbar.TabIndex = 0;
 
+            // ── btnVolver ─────────────────────────────────────────────────
+            this.btnVolver.BackColor = System.Drawing.Color.White;
+            this.btnVolver.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnVolver.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(203, 213, 225);
+            this.btnVolver.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnVolver.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.btnVolver.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            this.btnVolver.Location = new System.Drawing.Point(16, 18);
+            this.btnVolver.Name = "btnVolver";
+            this.btnVolver.Size = new System.Drawing.Size(85, 36);
+            this.btnVolver.TabIndex = 0;
+            this.btnVolver.Text = "← Volver";
+            this.btnVolver.UseVisualStyleBackColor = false;
+            this.btnVolver.Click += new System.EventHandler(this.btnVolver_Click);
+
             // ── lblTituloSeccion ──────────────────────────────────────────
             this.lblTituloSeccion.AutoSize = true;
             this.lblTituloSeccion.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.lblTituloSeccion.ForeColor = System.Drawing.Color.FromArgb(30, 41, 59);
-            this.lblTituloSeccion.Location = new System.Drawing.Point(16, 24);
+            this.lblTituloSeccion.Location = new System.Drawing.Point(115, 24);
             this.lblTituloSeccion.Name = "lblTituloSeccion";
             this.lblTituloSeccion.Size = new System.Drawing.Size(160, 21);
             this.lblTituloSeccion.TabIndex = 0;
@@ -73,7 +90,7 @@ namespace App_Contable.Presentacion
             this.pnlFiltroFechas.Controls.Add(this.btnFiltrar);
             this.pnlFiltroFechas.Controls.Add(this.dtpFechaCorte);
             this.pnlFiltroFechas.Controls.Add(this.lblPeriodo);
-            this.pnlFiltroFechas.Location = new System.Drawing.Point(190, 16);
+            this.pnlFiltroFechas.Location = new System.Drawing.Point(290, 16);
             this.pnlFiltroFechas.Name = "pnlFiltroFechas";
             this.pnlFiltroFechas.Size = new System.Drawing.Size(290, 38);
             this.pnlFiltroFechas.TabIndex = 1;
@@ -307,6 +324,7 @@ namespace App_Contable.Presentacion
 
         #endregion
 
+        private System.Windows.Forms.Button btnVolver;
         private System.Windows.Forms.Panel pnlToolbar;
         private System.Windows.Forms.Label lblTituloSeccion;
         private System.Windows.Forms.Panel pnlFiltroFechas;

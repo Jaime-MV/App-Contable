@@ -43,6 +43,71 @@ namespace App_Contable.Logica
         }
 
         /// <summary>
+        /// Calculates Estado de Resultados for a specific LibroDiarioInstancia.
+        /// </summary>
+        public DatosEstadoResultados CalcularDesdeLibro(LibroDiarioInstancia? libro, DateTime? desde = null, DateTime? hasta = null)
+        {
+            if (libro == null) return CalcularDesdeMayor(desde, hasta);
+
+            var hoy = DateTime.Today;
+            var cuentasMayor = _mayorServicio.GenerarMayorDesdeLibro(libro, desde, hasta);
+
+            var resultado = new DatosEstadoResultados
+            {
+                Empresa = string.IsNullOrWhiteSpace(libro.Empresa) ? "EMPRESA COMERCIAL, S.A. DE C.V." : libro.Empresa,
+                FechaInicio = desde ?? libro.FechaInicio,
+                FechaFin = hasta ?? libro.FechaFin
+            };
+
+            if (!cuentasMayor.Any())
+            {
+                return ObtenerDatosEjemplo();
+            }
+
+            decimal SaldoNeto(string nombreCuenta, bool esDeudor)
+            {
+                var matching = cuentasMayor.Where(x => x.NombreCuenta.Equals(nombreCuenta, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (!matching.Any()) return 0m;
+                decimal sumDebe = matching.Sum(x => x.TotalDebe);
+                decimal sumHaber = matching.Sum(x => x.TotalHaber);
+                return esDeudor ? (sumDebe - sumHaber) : (sumHaber - sumDebe);
+            }
+
+            // Ventas e ingresos
+            resultado.Ventas = Math.Max(0, SaldoNeto("Venta", false));
+            resultado.DevolucionesSobreVentas = Math.Max(0, SaldoNeto("Devolución de Venta", true));
+
+            // Compras y devoluciones
+            resultado.Compras = Math.Max(0, SaldoNeto("Compras", true));
+            resultado.GastosDeCompra = 0m;
+            resultado.DevolucionesSobreCompras = Math.Max(0, SaldoNeto("Devolución de Compra", false));
+
+            // Inventarios
+            decimal saldoInventario = Math.Max(0, SaldoNeto("Inventarios", true));
+            if (saldoInventario > 0)
+            {
+                resultado.InventarioFinal = saldoInventario;
+                resultado.InventarioInicial = Math.Max(0, saldoInventario - resultado.ComprasNetas * 0.2m);
+            }
+            else
+            {
+                var ejemplo = ObtenerDatosEjemplo();
+                resultado.InventarioInicial = ejemplo.InventarioInicial;
+                resultado.InventarioFinal = ejemplo.InventarioFinal;
+            }
+
+            // Gastos de operación
+            resultado.GastosFinancieros = Math.Max(0, SaldoNeto("Gastos Financieros", true));
+
+            if (resultado.Ventas == 0 && resultado.Compras == 0)
+            {
+                return ObtenerDatosEjemplo();
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
         /// Calcula el Estado de Resultados en tiempo real a partir de las cuentas y saldos
         /// registrados en el Libro Diario y Mayorización.
         /// </summary>

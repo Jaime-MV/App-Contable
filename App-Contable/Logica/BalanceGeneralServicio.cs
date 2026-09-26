@@ -45,6 +45,65 @@ namespace App_Contable.Logica
         }
 
         /// <summary>
+        /// Calculates Balance General for a specific LibroDiarioInstancia.
+        /// </summary>
+        public DatosBalanceGeneral CalcularDesdeLibro(LibroDiarioInstancia? libro, DateTime? hasta = null)
+        {
+            if (libro == null) return CalcularDesdeMayor(hasta);
+
+            var cuentasMayor = _mayorServicio.GenerarMayorDesdeLibro(libro, hasta: hasta);
+            var balance = new DatosBalanceGeneral
+            {
+                Empresa = string.IsNullOrWhiteSpace(libro.Empresa) ? "EMPRESA COMERCIAL, S.A. DE C.V." : libro.Empresa,
+                FechaCorte = hasta ?? libro.FechaFin
+            };
+
+            if (!cuentasMayor.Any())
+            {
+                return ObtenerDatosEjemplo();
+            }
+
+            decimal saldoNeto(string nombre, bool esDeudor)
+            {
+                var matching = cuentasMayor.Where(x => x.NombreCuenta.Equals(nombre, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (!matching.Any()) return 0m;
+                decimal sumDebe = matching.Sum(x => x.TotalDebe);
+                decimal sumHaber = matching.Sum(x => x.TotalHaber);
+                return esDeudor ? (sumDebe - sumHaber) : (sumHaber - sumDebe);
+            }
+
+            // 1. Activo Corriente (Cuentas de naturaleza deudora)
+            balance.EfectivoYEquivalentes = Math.Max(0, saldoNeto("Efectivo y Equivalentes", true));
+            balance.CreditoFiscalIva = Math.Max(0, saldoNeto("Crédito Fiscal IVA", true));
+            balance.Inventarios = Math.Max(0, saldoNeto("Inventarios", true));
+            balance.CuentasPorCobrar = Math.Max(0, saldoNeto("Cuentas por Cobrar", true));
+
+            // 2. Activo No Corriente (Deudora)
+            balance.PropiedadPlantaYEquipo = Math.Max(0, saldoNeto("Propiedad, Planta y Equipo", true));
+
+            // 3. Pasivo Corriente (Acreedoras)
+            balance.CuentasPorPagar = Math.Max(0, saldoNeto("Cuentas por Pagar", false));
+            balance.DebitoFiscalIva = Math.Max(0, saldoNeto("Débito Fiscal IVA", false));
+
+            // 4. Pasivo No Corriente (Acreedora)
+            balance.PrestamosBancarios = Math.Max(0, saldoNeto("Préstamos Bancarios", false));
+
+            // 5. Patrimonio (Acreedora)
+            balance.CapitalSocial = Math.Max(0, saldoNeto("Capital Social", false));
+
+            // 6. Utilidad Operacional / del Ejercicio
+            decimal ventasNetas = saldoNeto("Venta", false) - saldoNeto("Devolución de Venta", true);
+            decimal costoComprasNeto = saldoNeto("Compras", true) - saldoNeto("Devolución de Compra", false);
+            decimal gastosFinancieros = saldoNeto("Gastos Financieros", true);
+            decimal utilidadCalculada = ventasNetas - costoComprasNeto - gastosFinancieros;
+
+            decimal utilidadCuadre = balance.TotalActivo - balance.TotalPasivo - balance.CapitalSocial;
+            balance.UtilidadOperacional = (utilidadCalculada != 0m) ? utilidadCalculada : utilidadCuadre;
+
+            return balance;
+        }
+
+        /// <summary>
         /// Calcula el Balance General en tiempo real a partir de las cuentas y saldos
         /// registrados en el Libro Diario y Mayor.
         /// </summary>

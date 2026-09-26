@@ -14,9 +14,12 @@ namespace App_Contable.Presentacion
         private DatosEstadoResultados _estadoActual = new();
         private bool _modoEjemplo = false; // Modo automático activo por defecto
 
-        public frmEstadoResultados()
+        public LibroDiarioInstancia? LibroActivo { get; set; }
+
+        public frmEstadoResultados(LibroDiarioInstancia? libroSeleccionado = null)
         {
             InitializeComponent();
+            LibroActivo = libroSeleccionado;
             ConfigurarFormulario();
             CargarDatos(usarEjemplo: false);
         }
@@ -26,8 +29,18 @@ namespace App_Contable.Presentacion
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
 
             var hoy = DateTime.Today;
-            dtpFechaInicio.Value = new DateTime(hoy.Year, 1, 1);
-            dtpFechaFin.Value = hoy;
+            if (LibroActivo != null)
+            {
+                lblTituloSeccion.Text = $"ESTADO DE RESULTADOS — {LibroActivo.Nombre.ToUpperInvariant()}";
+                dtpFechaInicio.Value = LibroActivo.FechaInicio;
+                dtpFechaFin.Value = LibroActivo.FechaFin;
+            }
+            else
+            {
+                lblTituloSeccion.Text = "ESTADO DE RESULTADOS";
+                dtpFechaInicio.Value = new DateTime(hoy.Year, 1, 1);
+                dtpFechaFin.Value = hoy;
+            }
 
             dgvEstadoResultados.AutoGenerateColumns = false;
             dgvEstadoResultados.DoubleBuffered(true);
@@ -76,6 +89,14 @@ namespace App_Contable.Presentacion
                 btnCalcularMayor.ForeColor = Color.FromArgb(71, 85, 105);
                 btnCargarEjemplo.BackColor = Color.FromArgb(241, 245, 249);
                 btnCargarEjemplo.ForeColor = Color.FromArgb(30, 41, 59);
+            }
+            else if (LibroActivo != null)
+            {
+                _estadoActual = _servicio.CalcularDesdeLibro(LibroActivo, dtpFechaInicio.Value.Date, dtpFechaFin.Value.Date);
+                btnCalcularMayor.BackColor = Color.FromArgb(220, 252, 231);
+                btnCalcularMayor.ForeColor = Color.FromArgb(22, 101, 52);
+                btnCargarEjemplo.BackColor = Color.White;
+                btnCargarEjemplo.ForeColor = Color.FromArgb(71, 85, 105);
             }
             else
             {
@@ -206,6 +227,17 @@ namespace App_Contable.Presentacion
         private void btnFiltrar_Click(object sender, EventArgs e)
         {
             CargarDatos(usarEjemplo: false);
+        }
+
+        private void btnVolver_Click(object? sender, EventArgs e)
+        {
+            var nav = NavegacionHelper.ObtenerNavegacion(this);
+            if (nav != null)
+            {
+                nav.AbrirFormularioEnPanel(new frmInicioEstadoResultados());
+                return;
+            }
+            this.Close();
         }
     }
 }

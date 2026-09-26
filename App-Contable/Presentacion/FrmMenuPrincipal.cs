@@ -263,13 +263,13 @@ namespace App_Contable.Presentacion
         private void btnBalanceGeneral_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnBalanceGeneral, "Balance General");
-            AbrirFormularioEnPanel(new frmBalanceGeneral());
+            AbrirFormularioEnPanel(new frmInicioBalanceGeneral());
         }
 
         private void btnEstadoResultados_Click(object sender, EventArgs e)
         {
             ResaltarBotonMenu(btnEstadoResultados, "Estado de Resultados");
-            AbrirFormularioEnPanel(new frmEstadoResultados());
+            AbrirFormularioEnPanel(new frmInicioEstadoResultados());
         }
 
         private void btnKardex_Click(object sender, EventArgs e)
@@ -293,4 +293,5 @@ namespace App_Contable.Presentacion
         #endregion
     }
 }
+
 

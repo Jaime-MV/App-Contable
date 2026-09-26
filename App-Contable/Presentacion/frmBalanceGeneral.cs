@@ -14,9 +14,12 @@ namespace App_Contable.Presentacion
         private DatosBalanceGeneral _balanceActual = new();
         private bool _modoEjemplo = false; // MODO AUTOMÁTICO ACTIVO POR DEFECTO
 
-        public frmBalanceGeneral()
+        public LibroDiarioInstancia? LibroActivo { get; set; }
+
+        public frmBalanceGeneral(LibroDiarioInstancia? libroSeleccionado = null)
         {
             InitializeComponent();
+            LibroActivo = libroSeleccionado;
             ConfigurarFormulario();
             // Cargar en modo automático calculando desde el Libro Diario y Mayor
             CargarDatos(usarEjemplo: false);
@@ -26,7 +29,16 @@ namespace App_Contable.Presentacion
         {
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
 
-            dtpFechaCorte.Value = DateTime.Today;
+            if (LibroActivo != null)
+            {
+                lblTituloSeccion.Text = $"BALANCE GENERAL — {LibroActivo.Nombre.ToUpperInvariant()}";
+                dtpFechaCorte.Value = LibroActivo.FechaFin;
+            }
+            else
+            {
+                lblTituloSeccion.Text = "BALANCE GENERAL";
+                dtpFechaCorte.Value = DateTime.Today;
+            }
 
             dgvBalanceGeneral.AutoGenerateColumns = false;
             dgvBalanceGeneral.DoubleBuffered(true);
@@ -81,6 +93,14 @@ namespace App_Contable.Presentacion
                 btnCalcularMayor.ForeColor = Color.FromArgb(71, 85, 105);
                 btnCargarEjemplo.BackColor = Color.FromArgb(241, 245, 249);
                 btnCargarEjemplo.ForeColor = Color.FromArgb(30, 41, 59);
+            }
+            else if (LibroActivo != null)
+            {
+                _balanceActual = _servicio.CalcularDesdeLibro(LibroActivo, dtpFechaCorte.Value.Date);
+                btnCalcularMayor.BackColor = Color.FromArgb(220, 252, 231);
+                btnCalcularMayor.ForeColor = Color.FromArgb(22, 101, 52);
+                btnCargarEjemplo.BackColor = Color.White;
+                btnCargarEjemplo.ForeColor = Color.FromArgb(71, 85, 105);
             }
             else
             {
@@ -217,6 +237,17 @@ namespace App_Contable.Presentacion
         private void btnFiltrar_Click(object sender, EventArgs e)
         {
             CargarDatos(usarEjemplo: false);
+        }
+
+        private void btnVolver_Click(object? sender, EventArgs e)
+        {
+            var nav = NavegacionHelper.ObtenerNavegacion(this);
+            if (nav != null)
+            {
+                nav.AbrirFormularioEnPanel(new frmInicioBalanceGeneral());
+                return;
+            }
+            this.Close();
         }
     }
 }
