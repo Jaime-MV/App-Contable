@@ -131,8 +131,9 @@ namespace App_Contable.Logica
 
                 decimal debeAcumulado = 0m;
                 decimal haberAcumulado = 0m;
+                bool esAcreedora = EsCuentaAcreedoraPorDefecto(cuentaMayor.NombreCuenta);
 
-                // c) Ordenar los renglones cronológicamente por fecha y partida (Partida N° 1, 2, 3...)
+                // c) Ordenar los renglones estrictamente por fecha cronológica y número de partida
                 var movsOrdenados = grupo
                     .OrderBy(x => x.Asiento.Fecha)
                     .ThenBy(x => x.Asiento.NumeroAsiento)
@@ -146,9 +147,22 @@ namespace App_Contable.Logica
                     debeAcumulado += debeMov;
                     haberAcumulado += haberMov;
 
-                    // Calcular saldo progresivo en cada fila
-                    decimal saldoProgresivo = debeAcumulado - haberAcumulado;
-                    string naturalezaFila = saldoProgresivo >= 0 ? "D" : "A";
+                    // Calcular saldo progresivo en cada fila según la naturaleza contable
+                    decimal saldoProgresivo;
+                    string naturalezaFila;
+
+                    if (esAcreedora)
+                    {
+                        decimal balance = haberAcumulado - debeAcumulado;
+                        saldoProgresivo = Math.Abs(balance);
+                        naturalezaFila = balance >= 0 ? "A" : "D";
+                    }
+                    else
+                    {
+                        decimal balance = debeAcumulado - haberAcumulado;
+                        saldoProgresivo = Math.Abs(balance);
+                        naturalezaFila = balance >= 0 ? "D" : "A";
+                    }
 
                     cuentaMayor.Movimientos.Add(new FilaMayorizacionVisual
                     {
@@ -157,7 +171,7 @@ namespace App_Contable.Logica
                         Concepto = item.Asiento.Concepto,
                         Debe = debeMov > 0 ? debeMov : (decimal?)null,
                         Haber = haberMov > 0 ? haberMov : (decimal?)null,
-                        Saldo = Math.Abs(saldoProgresivo),
+                        Saldo = saldoProgresivo,
                         NaturalezaSaldo = naturalezaFila
                     });
                 }
@@ -174,6 +188,29 @@ namespace App_Contable.Logica
                 .OrderBy(c => ObtenerOrdenCuenta(c.NombreCuenta))
                 .ThenBy(c => c.NombreSubcuenta ?? string.Empty)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Determina si una cuenta contable posee naturaleza acreedora por defecto (Pasivo, Patrimonio, Ingreso).
+        /// </summary>
+        private static bool EsCuentaAcreedoraPorDefecto(string nombreCuenta)
+        {
+            if (string.IsNullOrWhiteSpace(nombreCuenta)) return false;
+            string n = nombreCuenta.ToLowerInvariant();
+
+            return n.Contains("pagar") ||
+                   n.Contains("capital") ||
+                   (n.Contains("venta") && !n.Contains("devoluci")) ||
+                   n.Contains("debito") || n.Contains("débito") ||
+                   n.Contains("ingreso") ||
+                   n.Contains("prestamo") || n.Contains("préstamo") ||
+                   n.Contains("acreedor") ||
+                   n.Contains("reserva") ||
+                   n.Contains("utilidad") ||
+                   n.Contains("superavit") || n.Contains("superávit") ||
+                   n.Contains("pasivo") ||
+                   n.Contains("patrimonio") ||
+                   (n.Contains("devoluci") && n.Contains("compra"));
         }
 
         /// <summary>
@@ -211,6 +248,7 @@ namespace App_Contable.Logica
             }
 
             var resultado = new List<FilaMayorTablaVisual>();
+            var cultureUs = new System.Globalization.CultureInfo("en-US");
 
             decimal totalDebeGlobal = 0m;
             decimal totalHaberGlobal = 0m;
@@ -224,16 +262,18 @@ namespace App_Contable.Logica
                     ? cuenta.NombreCuenta
                     : $"{cuenta.NombreCuenta} › {cuenta.NombreSubcuenta}";
 
+                string textoSaldo = cuenta.SaldoFinal.ToString("$#,##0.00", cultureUs);
+
                 // 1. Fila de Encabezado de la Cuenta (Estilo EncabezadoPartida de Libro Diario)
                 resultado.Add(new FilaMayorTablaVisual
                 {
                     Fecha = string.Empty,
                     Referencia = string.Empty,
-                    Descripcion = $"CUENTA: {tituloCuenta.ToUpper()}   |   SALDO {cuenta.NaturalezaSaldo.ToUpper()}: ${cuenta.SaldoFinal:N2}",
+                    Descripcion = $"CUENTA: {tituloCuenta.ToUpper()}   |   SALDO {cuenta.NaturalezaSaldo.ToUpper()}: {textoSaldo}",
                     Debe = null,
                     Haber = null,
                     Saldo = null,
-                    Naturaleza = cuenta.NaturalezaSaldo == "Deudor" ? "D" : "A",
+                    Naturaleza = cuenta.NaturalezaSaldo == "Acreedor" ? "A" : (cuenta.NaturalezaSaldo == "Deudor" ? "D" : "-"),
                     TipoFila = TipoFilaMayorVisual.EncabezadoCuenta
                 });
 
@@ -262,7 +302,7 @@ namespace App_Contable.Logica
                     Debe = cuenta.TotalDebe,
                     Haber = cuenta.TotalHaber,
                     Saldo = cuenta.SaldoFinal,
-                    Naturaleza = cuenta.NaturalezaSaldo == "Deudor" ? "D" : "A",
+                    Naturaleza = cuenta.NaturalezaSaldo == "Acreedor" ? "A" : (cuenta.NaturalezaSaldo == "Deudor" ? "D" : "-"),
                     TipoFila = TipoFilaMayorVisual.TotalCuenta
                 });
 

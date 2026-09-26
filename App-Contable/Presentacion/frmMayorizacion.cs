@@ -61,6 +61,9 @@ namespace App_Contable.Presentacion
             dgvMayorizacion.CellFormatting += DgvMayorizacion_CellFormatting;
             dgvMayorizacion.RowPrePaint += DgvMayorizacion_RowPrePaint;
 
+            this.toolTipAyuda = new ToolTip();
+            this.toolTipAyuda.SetToolTip(this.btnCopiar, "Copiar reporte completo al portapapeles para pegar en Excel");
+
             pnlToolbar.Paint += (s, e) =>
             {
                 using var pen = new Pen(Color.FromArgb(226, 232, 240));
@@ -486,13 +489,14 @@ namespace App_Contable.Presentacion
 
         private void ActualizarResumen(List<CuentaMayor> cuentas)
         {
+            var culture = new System.Globalization.CultureInfo("en-US");
             int total = cuentas.Count;
             decimal totalD = cuentas.Sum(c => c.TotalDebe);
             decimal totalH = cuentas.Sum(c => c.TotalHaber);
 
             lblTotalCuentas.Text = $"Total Cuentas: {total}";
-            lblTotalDebe.Text = $"Total Debe: {totalD:C2}";
-            lblTotalHaber.Text = $"Total Haber: {totalH:C2}";
+            lblTotalDebe.Text = $"Total Debe: {totalD.ToString("C2", culture)}";
+            lblTotalHaber.Text = $"Total Haber: {totalH.ToString("C2", culture)}";
 
             bool cuadrado = total > 0 && Math.Round(totalD, 2) == Math.Round(totalH, 2);
             if (cuadrado)
@@ -548,6 +552,11 @@ namespace App_Contable.Presentacion
         private void btnFiltrar_Click(object sender, EventArgs e)
         {
             CargarDatos(dtpDesde.Value.Date, dtpHasta.Value.Date);
+        }
+
+        private void btnCopiar_Click(object? sender, EventArgs e)
+        {
+            PortapapelesContableHelper.CopiarGrillaAlPortapapeles(dgvMayorizacion, btnCopiar, "Libro Mayor");
         }
     }
 }

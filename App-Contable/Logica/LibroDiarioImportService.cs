@@ -88,6 +88,7 @@ namespace App_Contable.Logica
 
             var asientos = new List<AsientoContable>();
             AsientoContable? asientoActual = null;
+            MovimientoContable? ultimoMovimientoPrincipal = null;
             string? linea;
             int numeroLinea = 0;
 
@@ -114,7 +115,7 @@ namespace App_Contable.Logica
                 }
 
                 // 2. Detección de nuevo asiento:
-                // Al leer una fila donde la columna 0 tenga fecha (ej: '1-ene', '3-ene') 
+                // Al leer una fila donde la columna 0 tenga fecha (ej: '1-ene', '3-ene', '10-feb') 
                 // y la columna 1 contenga la palabra 'ASIENTO' (ej: 'ASIENTO #1', 'ASIENTO #2', 'PARTIDA 1')
                 bool esNuevoAsiento = ContienePalabraAsiento(col1) || (ContienePalabraAsiento(col0) && !EsGlosa(col0));
 
@@ -130,7 +131,7 @@ namespace App_Contable.Logica
                     string textoFecha = ContienePalabraAsiento(col1) ? col0 : (cols.Count > 1 ? col1 : string.Empty);
 
                     int numAsiento = ExtraerNumeroAsiento(textoAsiento, asientos.Count + 1);
-                    DateTime fecha = ParseFechaContable(textoFecha, AnioContableActivo);
+                    DateTime fecha = ParsearFechaCsv(textoFecha, AnioContableActivo);
 
                     asientoActual = new AsientoContable
                     {
@@ -139,6 +140,7 @@ namespace App_Contable.Logica
                         Concepto = string.Empty,
                         Movimientos = new List<MovimientoContable>()
                     };
+                    ultimoMovimientoPrincipal = null;
 
                     continue;
                 }
@@ -148,7 +150,7 @@ namespace App_Contable.Logica
                 {
                     if (int.TryParse(col0, out int nAsiento) && nAsiento > 0)
                     {
-                        DateTime f = ParseFechaContable(col1, AnioContableActivo);
+                        DateTime f = ParsearFechaCsv(col1, AnioContableActivo);
                         asientoActual = new AsientoContable
                         {
                             NumeroAsiento = nAsiento,
@@ -156,6 +158,7 @@ namespace App_Contable.Logica
                             Concepto = col4,
                             Movimientos = new List<MovimientoContable>()
                         };
+                        ultimoMovimientoPrincipal = null;
                     }
                     else
                     {
@@ -172,7 +175,7 @@ namespace App_Contable.Logica
                             asientos.Add(asientoActual);
                         }
 
-                        DateTime f = ParseFechaContable(col1, AnioContableActivo);
+                        DateTime f = ParsearFechaCsv(col1, AnioContableActivo);
                         asientoActual = new AsientoContable
                         {
                             NumeroAsiento = nAsiento,
@@ -180,6 +183,7 @@ namespace App_Contable.Logica
                             Concepto = col4,
                             Movimientos = new List<MovimientoContable>()
                         };
+                        ultimoMovimientoPrincipal = null;
                     }
                 }
 
@@ -252,39 +256,55 @@ namespace App_Contable.Logica
                     subcuenta = splitCuenta.Length > 1 ? splitCuenta[1].Trim() : null;
                 }
 
-                // Reglas estrictas de asignación:
-                // a) El Debe solo suma montos de la columna Debe (> 0)
+                // Reglas estrictas de asignación y vinculación jerárquica de subcuentas:
                 if (debe > 0)
                 {
-                    asientoActual.Movimientos.Add(new MovimientoContable
+                    var mov = new MovimientoContable
                     {
                         CuentaPrincipal = cuentaLimpia,
                         Subcuenta = subcuenta,
                         Movimiento = TipoMovimiento.Debe,
                         Monto = debe
-                    });
+                    };
+                    asientoActual.Movimientos.Add(mov);
+                    ultimoMovimientoPrincipal = mov;
                 }
-                // b) El Haber solo suma montos de la columna Haber (> 0)
                 else if (haber > 0)
                 {
-                    asientoActual.Movimientos.Add(new MovimientoContable
+                    var mov = new MovimientoContable
                     {
                         CuentaPrincipal = cuentaLimpia,
                         Subcuenta = subcuenta,
                         Movimiento = TipoMovimiento.Haber,
                         Monto = haber
-                    });
+                    };
+                    asientoActual.Movimientos.Add(mov);
+                    ultimoMovimientoPrincipal = mov;
                 }
-                // c) La columna Parcial pertenece exclusivamente a subcuentas informativas (Caja, Bancos, etc.)
-                // NUNCA se suma a Debe ni Haber.
                 else if (parcial > 0)
                 {
-                    if (asientoActual.Movimientos.Any())
+                    // Asociación correcta de Cuenta Principal y Subcuenta:
+                    // Asigna esa fila como subcuenta de la principal ('Efectivo y Equivalentes › Bancos')
+                    if (ultimoMovimientoPrincipal != null)
                     {
-                        var ultimoMov = asientoActual.Movimientos.Last();
-                        ultimoMov.Subcuenta = string.IsNullOrWhiteSpace(ultimoMov.Subcuenta)
-                            ? cuentaLimpia
-                            : $"{ultimoMov.Subcuenta}, {cuentaLimpia}";
+                        if (string.IsNullOrWhiteSpace(ultimoMovimientoPrincipal.Subcuenta))
+                        {
+                            // Primera subcuenta ligada a la cuenta principal
+                            ultimoMovimientoPrincipal.Subcuenta = cuentaLimpia;
+                            ultimoMovimientoPrincipal.Monto = parcial;
+                        }
+                        else
+                        {
+                            // Subcuentas adicionales ligadas a la misma cuenta principal (ej: Bancos después de Caja)
+                            var subMov = new MovimientoContable
+                            {
+                                CuentaPrincipal = ultimoMovimientoPrincipal.CuentaPrincipal,
+                                Subcuenta = cuentaLimpia,
+                                Movimiento = ultimoMovimientoPrincipal.Movimiento,
+                                Monto = parcial
+                            };
+                            asientoActual.Movimientos.Add(subMov);
+                        }
                     }
                 }
             }
@@ -427,62 +447,79 @@ namespace App_Contable.Logica
             return fallback;
         }
 
-        private static DateTime ParseFechaContable(string texto, int anioPredeterminado = 2026)
+        /// <summary>
+        /// Parsea de forma estricta fechas en español evitando que días como '10-feb' se confundan con el año 2010.
+        /// </summary>
+        public static DateTime ParsearFechaCsv(string textoFecha, int anioContable = 2026)
         {
-            if (string.IsNullOrWhiteSpace(texto)) return new DateTime(anioPredeterminado, 1, 1);
-            string limpio = texto.Trim().ToLowerInvariant().Replace(".", "");
+            if (string.IsNullOrWhiteSpace(textoFecha)) 
+                return new DateTime(anioContable, 1, 1);
 
-            // 1. Intentar parseo estándar
-            if (DateTime.TryParse(limpio, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt) && dt.Year >= 2000)
-                return dt;
-            if (DateTime.TryParse(limpio, new CultureInfo("es-ES"), DateTimeStyles.None, out dt) && dt.Year >= 2000)
-                return dt;
+            string limpio = textoFecha.Trim().ToLowerInvariant().Replace(".", "").Replace(",", "");
 
-            // 2. Parseo para formatos abreviados: "1-ene", "01-ene", "15-feb", "3/ene", "1-ene-2026", etc.
             var meses = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
-                { "ene", 1 }, { "enero", 1 }, { "jan", 1 },
-                { "feb", 2 }, { "febrero", 2 },
-                { "mar", 3 }, { "marzo", 3 },
-                { "abr", 4 }, { "abril", 4 }, { "apr", 4 },
+                { "ene", 1 }, { "enero", 1 }, { "jan", 1 }, { "january", 1 },
+                { "feb", 2 }, { "febrero", 2 }, { "february", 2 },
+                { "mar", 3 }, { "marzo", 3 }, { "march", 3 },
+                { "abr", 4 }, { "abril", 4 }, { "apr", 4 }, { "april", 4 },
                 { "may", 5 }, { "mayo", 5 },
-                { "jun", 6 }, { "junio", 6 },
-                { "jul", 7 }, { "julio", 7 },
-                { "ago", 8 }, { "agosto", 8 }, { "aug", 8 },
-                { "sep", 9 }, { "set", 9 }, { "septiembre", 9 }, { "setiembre", 9 },
-                { "oct", 10 }, { "octubre", 10 },
-                { "nov", 11 }, { "noviembre", 11 },
-                { "dic", 12 }, { "diciembre", 12 }, { "dec", 12 }
+                { "jun", 6 }, { "junio", 6 }, { "june", 6 },
+                { "jul", 7 }, { "julio", 7 }, { "july", 7 },
+                { "ago", 8 }, { "agosto", 8 }, { "aug", 8 }, { "august", 8 },
+                { "sep", 9 }, { "set", 9 }, { "septiembre", 9 }, { "setiembre", 9 }, { "sept", 9 }, { "september", 9 },
+                { "oct", 10 }, { "octubre", 10 }, { "october", 10 },
+                { "nov", 11 }, { "noviembre", 11 }, { "november", 11 },
+                { "dic", 12 }, { "diciembre", 12 }, { "dec", 12 }, { "december", 12 }
             };
 
             var partes = limpio.Split(new[] { '-', '/', ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
             if (partes.Length >= 2)
             {
+                // Regla estricta: primer valor numérico es DÍA, segundo valor es MES
                 if (int.TryParse(partes[0], out int dia))
                 {
                     string mesStr = partes[1];
-                    if (meses.TryGetValue(mesStr, out int mesNum))
+                    int mesNum = 0;
+
+                    if (meses.TryGetValue(mesStr, out int m))
                     {
-                        int anio = anioPredeterminado;
-                        if (partes.Length >= 3 && int.TryParse(partes[2], out int anioParsed))
-                        {
-                            anio = anioParsed < 100 ? 2000 + anioParsed : anioParsed;
-                        }
-                        return new DateTime(anio, mesNum, Math.Clamp(dia, 1, DateTime.DaysInMonth(anio, mesNum)));
+                        mesNum = m;
                     }
-                    else if (int.TryParse(mesStr, out int mesDirecto) && mesDirecto >= 1 && mesDirecto <= 12)
+                    else if (int.TryParse(mesStr, out int mDirecto) && mDirecto >= 1 && mDirecto <= 12)
                     {
-                        int anio = anioPredeterminado;
+                        mesNum = mDirecto;
+                    }
+
+                    if (mesNum >= 1 && mesNum <= 12)
+                    {
+                        int anio = anioContable;
                         if (partes.Length >= 3 && int.TryParse(partes[2], out int anioParsed))
                         {
                             anio = anioParsed < 100 ? 2000 + anioParsed : anioParsed;
                         }
-                        return new DateTime(anio, mesDirecto, Math.Clamp(dia, 1, DateTime.DaysInMonth(anio, mesDirecto)));
+
+                        int maxDias = DateTime.DaysInMonth(anio, mesNum);
+                        int diaValido = Math.Clamp(dia, 1, maxDias);
+                        return new DateTime(anio, mesNum, diaValido);
                     }
                 }
             }
 
-            return new DateTime(anioPredeterminado, 1, 1);
+            // Fallback para fechas numéricas completas estilo ISO "2026-01-15"
+            if (partes.Length == 3 && int.TryParse(partes[0], out int posibleAnio) && posibleAnio >= 2000 &&
+                int.TryParse(partes[1], out int posibleMes) && posibleMes >= 1 && posibleMes <= 12 &&
+                int.TryParse(partes[2], out int posibleDia))
+            {
+                int maxDias = DateTime.DaysInMonth(posibleAnio, posibleMes);
+                return new DateTime(posibleAnio, posibleMes, Math.Clamp(posibleDia, 1, maxDias));
+            }
+
+            // Fallback con TryParse estándar en español
+            if (DateTime.TryParse(limpio, new CultureInfo("es-ES"), DateTimeStyles.None, out var dt) && dt.Year >= 2000)
+                return dt;
+
+            return new DateTime(anioContable, 1, 1);
         }
 
         private static bool LimpiarYParsearMonto(string texto, out decimal monto)

@@ -181,6 +181,13 @@ namespace App_Contable.Presentacion
                     return;
                 }
 
+                using var modalSel = new frmSeleccionarLibroDiarioModal("Selecciona un Libro Diario para calibrar y generar su Tarjeta Kardex.");
+                if (modalSel.ShowDialog(this) == DialogResult.OK && modalSel.LibroSeleccionado != null)
+                {
+                    AbrirKardexDesdeLibro(modalSel.LibroSeleccionado);
+                    return;
+                }
+
                 MessageBox.Show(
                     "Por favor, selecciona un libro diario o una tarjeta Kardex de la lista.",
                     "Selección Requerida",
@@ -201,8 +208,12 @@ namespace App_Contable.Presentacion
 
         private void AbrirKardexDesdeLibro(LibroDiarioInstancia libro)
         {
-            var formKardex = new frmKardex(libro);
-            NavegacionHelper.NavegarA(this, formKardex);
+            using var modalCalibracion = new frmCalibracionKardex(libro);
+            if (modalCalibracion.ShowDialog(this) == DialogResult.OK && modalCalibracion.KardexGenerado != null)
+            {
+                _kardexStorage.GuardarTarjeta(modalCalibracion.KardexGenerado);
+                NavegacionHelper.NavegarA(this, new frmKardex(modalCalibracion.KardexGenerado));
+            }
         }
 
         private void AbrirKardexManual()

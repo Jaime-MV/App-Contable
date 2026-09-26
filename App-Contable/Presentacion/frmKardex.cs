@@ -244,7 +244,8 @@ namespace App_Contable.Presentacion
                 }
                 else
                 {
-                    lblBadgeEstado.Text = $"✓ Valuado ({metodoTexto})";
+                    string costoVentasInfo = _resumenActual.CostoDeVentas > 0 ? $" · Costo Ventas: {_resumenActual.CostoDeVentas.ToString("$#,##0.00", UsCulture)}" : string.Empty;
+                    lblBadgeEstado.Text = $"✓ Valuado ({metodoTexto}){costoVentasInfo}";
                     lblBadgeEstado.ForeColor = Color.FromArgb(21, 128, 61);
                 }
             }

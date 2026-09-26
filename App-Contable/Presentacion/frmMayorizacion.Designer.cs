@@ -32,6 +32,7 @@ namespace App_Contable.Presentacion
             this.btnFiltrar = new System.Windows.Forms.Button();
             this.cmbCuentas = new System.Windows.Forms.ComboBox();
             this.btnCambiarVista = new System.Windows.Forms.Button();
+            this.btnCopiar = new System.Windows.Forms.Button();
             this.btnRefrescar = new System.Windows.Forms.Button();
             this.pnlGrillaContenedor = new System.Windows.Forms.Panel();
             this.dgvMayorizacion = new System.Windows.Forms.DataGridView();
@@ -61,6 +62,7 @@ namespace App_Contable.Presentacion
             // ── pnlToolbar ────────────────────────────────────────────────
             this.pnlToolbar.BackColor = System.Drawing.Color.White;
             this.pnlToolbar.Controls.Add(this.btnRefrescar);
+            this.pnlToolbar.Controls.Add(this.btnCopiar);
             this.pnlToolbar.Controls.Add(this.btnCambiarVista);
             this.pnlToolbar.Controls.Add(this.cmbCuentas);
             this.pnlToolbar.Controls.Add(this.pnlFiltro);
@@ -160,9 +162,9 @@ namespace App_Contable.Presentacion
             this.cmbCuentas.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbCuentas.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.cmbCuentas.FormattingEnabled = true;
-            this.cmbCuentas.Location = new System.Drawing.Point(680, 23);
+            this.cmbCuentas.Location = new System.Drawing.Point(590, 23);
             this.cmbCuentas.Name = "cmbCuentas";
-            this.cmbCuentas.Size = new System.Drawing.Size(145, 23);
+            this.cmbCuentas.Size = new System.Drawing.Size(140, 23);
             this.cmbCuentas.TabIndex = 3;
             this.cmbCuentas.SelectedIndexChanged += new System.EventHandler(this.cmbCuentas_SelectedIndexChanged);
 
@@ -174,13 +176,29 @@ namespace App_Contable.Presentacion
             this.btnCambiarVista.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCambiarVista.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.btnCambiarVista.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
-            this.btnCambiarVista.Location = new System.Drawing.Point(820, 18);
+            this.btnCambiarVista.Location = new System.Drawing.Point(740, 18);
             this.btnCambiarVista.Name = "btnCambiarVista";
-            this.btnCambiarVista.Size = new System.Drawing.Size(145, 36);
+            this.btnCambiarVista.Size = new System.Drawing.Size(130, 36);
             this.btnCambiarVista.TabIndex = 3;
             this.btnCambiarVista.Text = "🗂️ Vista Tarjetas";
             this.btnCambiarVista.UseVisualStyleBackColor = false;
             this.btnCambiarVista.Click += new System.EventHandler(this.btnCambiarVista_Click);
+
+            // ── btnCopiar ─────────────────────────────────────────────────
+            this.btnCopiar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCopiar.BackColor = System.Drawing.Color.White;
+            this.btnCopiar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnCopiar.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(203, 213, 225);
+            this.btnCopiar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCopiar.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.btnCopiar.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            this.btnCopiar.Location = new System.Drawing.Point(880, 18);
+            this.btnCopiar.Name = "btnCopiar";
+            this.btnCopiar.Size = new System.Drawing.Size(95, 36);
+            this.btnCopiar.TabIndex = 4;
+            this.btnCopiar.Text = "📋 Copiar";
+            this.btnCopiar.UseVisualStyleBackColor = false;
+            this.btnCopiar.Click += new System.EventHandler(this.btnCopiar_Click);
 
             // ── btnRefrescar ──────────────────────────────────────────────
             this.btnRefrescar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -190,10 +208,10 @@ namespace App_Contable.Presentacion
             this.btnRefrescar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRefrescar.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.btnRefrescar.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
-            this.btnRefrescar.Location = new System.Drawing.Point(975, 18);
+            this.btnRefrescar.Location = new System.Drawing.Point(985, 18);
             this.btnRefrescar.Name = "btnRefrescar";
-            this.btnRefrescar.Size = new System.Drawing.Size(105, 36);
-            this.btnRefrescar.TabIndex = 4;
+            this.btnRefrescar.Size = new System.Drawing.Size(95, 36);
+            this.btnRefrescar.TabIndex = 5;
             this.btnRefrescar.Text = "🔄 Refrescar";
             this.btnRefrescar.UseVisualStyleBackColor = false;
             this.btnRefrescar.Click += new System.EventHandler(this.btnRefrescar_Click);
@@ -422,7 +440,9 @@ namespace App_Contable.Presentacion
         private System.Windows.Forms.Button btnFiltrar;
         private System.Windows.Forms.ComboBox cmbCuentas;
         private System.Windows.Forms.Button btnCambiarVista;
+        private System.Windows.Forms.Button btnCopiar;
         private System.Windows.Forms.Button btnRefrescar;
+        private System.Windows.Forms.ToolTip toolTipAyuda;
         private System.Windows.Forms.Panel pnlGrillaContenedor;
         private System.Windows.Forms.DataGridView dgvMayorizacion;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFecha;

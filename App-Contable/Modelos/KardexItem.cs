@@ -72,6 +72,7 @@ namespace App_Contable.Modelos
         public decimal DiferenciaMonetaria => TotalDebe - TotalHaber;
         public decimal SaldoValorFinal { get; set; }
         public decimal UltimoCostoPromedio { get; set; }
+        public decimal CostoDeVentas { get; set; }
     }
 }
 
