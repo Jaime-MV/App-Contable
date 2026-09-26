@@ -18,11 +18,23 @@ namespace App_Contable.Presentacion
         private List<FilaLibroDiarioVisual> _filasActuales = new();
         private LibroDiarioInstancia? _instanciaActiva;
 
-        public frmLibroDiario()
+        public frmLibroDiario(LibroDiarioInstancia? instanciaInicial = null)
         {
             InitializeComponent();
             ConfigurarFormulario();
-            MostrarVistaDashboard();
+            if (instanciaInicial != null)
+            {
+                AbrirInstanciaLibro(instanciaInicial);
+            }
+            else
+            {
+                MostrarVistaDashboard();
+            }
+        }
+
+        public void CargarLibro(LibroDiarioInstancia instancia)
+        {
+            AbrirInstanciaLibro(instancia);
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -66,6 +78,8 @@ namespace App_Contable.Presentacion
             btnDashNuevo.Click     += btnCrearLibro_Click;
             btnDashGuardarBD.Click += btnGuardarBD_Click;
             btnDashEliminar.Click  += btnEliminarLibro_Click;
+            btnDashImportar.Click  += btnImportarLibro_Click;
+            btnDashExportar.Click  += btnExportarLibro_Click;
 
             // Búsqueda en vivo en dashboard
             txtBuscarDash.TextChanged += (s, e) => RefrescarDashboard();
@@ -173,11 +187,9 @@ namespace App_Contable.Presentacion
             pnlDashboard.Visible         = false;
             pnlGrillaContenedor.Visible  = true;
             pnlResumenInferior.Visible   = true;
-
-            CargarDatos();
         }
 
-        private void AbrirInstanciaLibro(LibroDiarioInstancia instancia)
+        public void AbrirInstanciaLibro(LibroDiarioInstancia instancia)
         {
             _instanciaActiva = instancia;
 
@@ -185,14 +197,11 @@ namespace App_Contable.Presentacion
             dtpFechaInicio.Value = instancia.FechaInicio;
             dtpFechaFin.Value    = instancia.FechaFin;
 
-            // Cargar asientos de la instancia en el servicio
-            _servicio.LimpiarTodos();
-            foreach (var asiento in instancia.Asientos)
-            {
-                _servicio.AgregarAsiento(asiento, out _);
-            }
+            // Cargar asientos de la instancia directamente en el servicio
+            _servicio.CargarAsientos(instancia.Asientos);
 
             MostrarVistaGrilla();
+            CargarAsientosEnGrid(instancia.Asientos);
         }
 
         private void VolverAlDashboard()
@@ -368,27 +377,322 @@ namespace App_Contable.Presentacion
             }
         }
 
+        private void btnImportarLibro_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                using var ofd = new OpenFileDialog
+                {
+                    Title = "Importar Libro Diario",
+                    Filter = "Archivos admitidos (*.csv;*.pdf)|*.csv;*.pdf|Archivos CSV (*.csv)|*.csv|Archivos PDF (*.pdf)|*.pdf",
+                    FilterIndex = 1
+                };
+
+                if (ofd.ShowDialog(this) == DialogResult.OK)
+                {
+                    Cursor = Cursors.WaitCursor;
+                    var resultado = LibroDiarioImportService.Instancia.ImportarArchivo(ofd.FileName);
+                    Cursor = Cursors.Default;
+
+                    if (resultado.Exitoso && resultado.InstanciaImportada != null)
+                    {
+                        RefrescarDashboard();
+
+                        var respuesta = MessageBox.Show(
+                            $"{resultado.Mensaje}\n\n¿Deseas abrir este libro diario importado ahora?",
+                            "Importación Exitosa",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Information);
+
+                        if (respuesta == DialogResult.Yes)
+                        {
+                            AbrirInstanciaLibro(resultado.InstanciaImportada);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            resultado.Mensaje,
+                            "Aviso de Importación",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Cursor = Cursors.Default;
+                MessageBox.Show(
+                    $"Error inesperado durante la importación: {ex.Message}",
+                    "Error de Importación",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnExportarLibro_Click(object? sender, EventArgs e)
+        {
+            var libro = ObtenerLibroSeleccionado();
+            if (libro == null)
+            {
+                MessageBox.Show(
+                    "Por favor selecciona un Libro Diario de la lista para exportar.",
+                    "Seleccionar Libro Diario",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            var ctxMenu = new ContextMenuStrip();
+            var itemCsv = new ToolStripMenuItem("📄 Exportar a CSV / Excel (*.csv)", null, (s, ev) => ExportarLibroCsv(libro));
+            var itemPdf = new ToolStripMenuItem("📕 Exportar a PDF (Documento Contable) (*.pdf)", null, (s, ev) => ExportarLibroPdf(libro));
+
+            itemCsv.Font = new Font("Segoe UI", 9.5f);
+            itemPdf.Font = new Font("Segoe UI", 9.5f);
+
+            ctxMenu.Items.Add(itemCsv);
+            ctxMenu.Items.Add(new ToolStripSeparator());
+            ctxMenu.Items.Add(itemPdf);
+
+            ctxMenu.Show(btnDashExportar, new Point(0, btnDashExportar.Height));
+        }
+
+        private void ExportarLibroCsv(LibroDiarioInstancia libro)
+        {
+            try
+            {
+                using var sfd = new SaveFileDialog
+                {
+                    Title = "Exportar Libro Diario a CSV / Excel",
+                    Filter = "Archivos CSV (*.csv)|*.csv",
+                    FileName = $"{SanitizarNombreArchivo(libro.Nombre)}.csv",
+                    DefaultExt = "csv"
+                };
+
+                if (sfd.ShowDialog(this) == DialogResult.OK)
+                {
+                    Cursor = Cursors.WaitCursor;
+                    LibroDiarioExportService.Instancia.ExportarCsv(libro, sfd.FileName);
+                    Cursor = Cursors.Default;
+
+                    MessageBox.Show(
+                        $"El libro diario '{libro.Nombre}' fue exportado exitosamente a CSV.\n\n" +
+                        $"• Ubicación: {sfd.FileName}\n" +
+                        $"• Total Asientos: {libro.Asientos.Count}\n" +
+                        $"• Total Debe: {libro.TotalDebe.ToString("$#,##0.00", System.Globalization.CultureInfo.GetCultureInfo("en-US"))}\n" +
+                        $"• Total Haber: {libro.TotalHaber.ToString("$#,##0.00", System.Globalization.CultureInfo.GetCultureInfo("en-US"))}",
+                        "Exportación a CSV Exitosa",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                Cursor = Cursors.Default;
+                MessageBox.Show(
+                    $"Ocurrió un error al exportar a CSV: {ex.Message}",
+                    "Error de Exportación",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void ExportarLibroPdf(LibroDiarioInstancia libro)
+        {
+            try
+            {
+                using var sfd = new SaveFileDialog
+                {
+                    Title = "Exportar Libro Diario a PDF (Documento Contable)",
+                    Filter = "Archivos PDF (*.pdf)|*.pdf",
+                    FileName = $"{SanitizarNombreArchivo(libro.Nombre)}.pdf",
+                    DefaultExt = "pdf"
+                };
+
+                if (sfd.ShowDialog(this) == DialogResult.OK)
+                {
+                    Cursor = Cursors.WaitCursor;
+                    LibroDiarioExportService.Instancia.ExportarPdf(libro, sfd.FileName);
+                    Cursor = Cursors.Default;
+
+                    var respuesta = MessageBox.Show(
+                        $"El documento contable PDF del libro '{libro.Nombre}' fue generado exitosamente.\n\n" +
+                        $"• Ubicación: {sfd.FileName}\n" +
+                        $"• Total Asientos: {libro.Asientos.Count}\n" +
+                        $"• Total Sumas Iguales: {libro.TotalDebe.ToString("$#,##0.00", System.Globalization.CultureInfo.GetCultureInfo("en-US"))}\n\n" +
+                        "¿Deseas abrir el archivo PDF generado ahora?",
+                        "Exportación a PDF Exitosa",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information);
+
+                    if (respuesta == DialogResult.Yes)
+                    {
+                        try
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(sfd.FileName) { UseShellExecute = true });
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Cursor = Cursors.Default;
+                MessageBox.Show(
+                    $"Ocurrió un error al generar el PDF: {ex.Message}",
+                    "Error de Exportación a PDF",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private static string SanitizarNombreArchivo(string nombre)
+        {
+            var invalidos = Path.GetInvalidFileNameChars();
+            var limpio = new string(nombre.Where(c => !invalidos.Contains(c)).ToArray());
+            return string.IsNullOrWhiteSpace(limpio) ? "LibroDiario" : limpio;
+        }
+
         // ══════════════════════════════════════════════════════════════
         //  GRILLA — Carga y pintado
         // ══════════════════════════════════════════════════════════════
-        private void CargarDatos(DateTime? desde = null, DateTime? hasta = null)
+        public void CargarAsientosEnGrid(List<AsientoContable> asientos)
         {
-            _filasActuales = _servicio.GenerarFilasVisuales(desde, hasta);
             dgvLibroDiario.Rows.Clear();
+            var culture = new System.Globalization.CultureInfo("en-US");
 
-            foreach (var fila in _filasActuales)
+            var asientosOrdenados = asientos.OrderBy(a => a.NumeroAsiento).ToList();
+
+            foreach (var asiento in asientosOrdenados)
             {
-                int index = dgvLibroDiario.Rows.Add(
-                    fila.Fecha,
-                    fila.Cuenta,
-                    fila.Parcial.HasValue  ? fila.Parcial.Value.ToString("N2")  : string.Empty,
-                    fila.Debe.HasValue     ? fila.Debe.Value.ToString("N2")     : string.Empty,
-                    fila.Haber.HasValue    ? fila.Haber.Value.ToString("N2")    : string.Empty
+                // a) Fila de Encabezado de Partida con fondo azul institucional #1E60FF y texto en blanco en negrita
+                int idxEncabezado = dgvLibroDiario.Rows.Add(
+                    asiento.Fecha.ToString("dd/MM/yyyy"),
+                    $"ASIENTO N° {asiento.NumeroAsiento}",
+                    string.Empty,
+                    string.Empty,
+                    string.Empty
                 );
-                dgvLibroDiario.Rows[index].Tag = fila;
+                dgvLibroDiario.Rows[idxEncabezado].Tag = new FilaLibroDiarioVisual
+                {
+                    NumeroAsiento = asiento.NumeroAsiento,
+                    Fecha = asiento.Fecha.ToString("dd/MM/yyyy"),
+                    Cuenta = $"ASIENTO N° {asiento.NumeroAsiento}",
+                    TipoFila = TipoFilaVisual.EncabezadoPartida
+                };
+
+                // b) Filas de movimiento contable en orden exacto de captura con sangría de 3 espacios para Haber
+                foreach (var mov in asiento.Movimientos)
+                {
+                    bool esHaber = mov.Movimiento == TipoMovimiento.Haber;
+                    string cuentaTexto = esHaber ? $"   {mov.CuentaPrincipal}" : mov.CuentaPrincipal;
+
+                    string strDebe = mov.Movimiento == TipoMovimiento.Debe && mov.Monto > 0
+                        ? mov.Monto.ToString("$#,##0.00", culture)
+                        : string.Empty;
+
+                    string strHaber = mov.Movimiento == TipoMovimiento.Haber && mov.Monto > 0
+                        ? mov.Monto.ToString("$#,##0.00", culture)
+                        : string.Empty;
+
+                    int idxMov = dgvLibroDiario.Rows.Add(
+                        string.Empty,
+                        cuentaTexto,
+                        string.Empty,
+                        strDebe,
+                        strHaber
+                    );
+                    dgvLibroDiario.Rows[idxMov].Tag = new FilaLibroDiarioVisual
+                    {
+                        NumeroAsiento = asiento.NumeroAsiento,
+                        Fecha = string.Empty,
+                        Cuenta = cuentaTexto,
+                        Debe = mov.Movimiento == TipoMovimiento.Debe ? mov.Monto : null,
+                        Haber = mov.Movimiento == TipoMovimiento.Haber ? mov.Monto : null,
+                        TipoFila = TipoFilaVisual.CuentaPrincipal
+                    };
+
+                    if (!string.IsNullOrWhiteSpace(mov.Subcuenta))
+                    {
+                        int idxSub = dgvLibroDiario.Rows.Add(
+                            string.Empty,
+                            $"      {mov.Subcuenta}",
+                            mov.Monto.ToString("$#,##0.00", culture),
+                            string.Empty,
+                            string.Empty
+                        );
+                        dgvLibroDiario.Rows[idxSub].Tag = new FilaLibroDiarioVisual
+                        {
+                            NumeroAsiento = asiento.NumeroAsiento,
+                            Fecha = string.Empty,
+                            Cuenta = $"      {mov.Subcuenta}",
+                            Parcial = mov.Monto,
+                            TipoFila = TipoFilaVisual.Subcuenta
+                        };
+                    }
+                }
+
+                // c) Fila de cierre / glosa (c/ + Concepto en cursiva)
+                if (!string.IsNullOrWhiteSpace(asiento.Concepto))
+                {
+                    string textoGlosa = asiento.Concepto.Trim().StartsWith("c/", StringComparison.OrdinalIgnoreCase)
+                        ? asiento.Concepto
+                        : $"c/ {asiento.Concepto}";
+
+                    int idxGlosa = dgvLibroDiario.Rows.Add(
+                        string.Empty,
+                        $"   {textoGlosa}",
+                        string.Empty,
+                        string.Empty,
+                        string.Empty
+                    );
+                    dgvLibroDiario.Rows[idxGlosa].Tag = new FilaLibroDiarioVisual
+                    {
+                        NumeroAsiento = asiento.NumeroAsiento,
+                        Fecha = string.Empty,
+                        Cuenta = $"   {textoGlosa}",
+                        TipoFila = TipoFilaVisual.ConceptoGlosa
+                    };
+                }
+
+                // d) Fila de totales del asiento + fila separadora vacía
+                int idxTotales = dgvLibroDiario.Rows.Add(
+                    string.Empty,
+                    "   Totales",
+                    string.Empty,
+                    asiento.TotalDebe.ToString("$#,##0.00", culture),
+                    asiento.TotalHaber.ToString("$#,##0.00", culture)
+                );
+                dgvLibroDiario.Rows[idxTotales].Tag = new FilaLibroDiarioVisual
+                {
+                    NumeroAsiento = asiento.NumeroAsiento,
+                    Fecha = string.Empty,
+                    Cuenta = "   Totales",
+                    Debe = asiento.TotalDebe,
+                    Haber = asiento.TotalHaber,
+                    TipoFila = TipoFilaVisual.TotalSumasIguales
+                };
+
+                int idxSep = dgvLibroDiario.Rows.Add(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
+                dgvLibroDiario.Rows[idxSep].Tag = new FilaLibroDiarioVisual
+                {
+                    NumeroAsiento = asiento.NumeroAsiento,
+                    TipoFila = TipoFilaVisual.Separador
+                };
             }
 
             ActualizarBarraResumen();
+        }
+
+        private void CargarDatos(DateTime? desde = null, DateTime? hasta = null)
+        {
+            var asientos = _servicio.ObtenerAsientos().AsEnumerable();
+            if (desde.HasValue)
+                asientos = asientos.Where(a => a.Fecha.Date >= desde.Value.Date);
+            if (hasta.HasValue)
+                asientos = asientos.Where(a => a.Fecha.Date <= hasta.Value.Date);
+
+            CargarAsientosEnGrid(asientos.ToList());
         }
 
         private void DgvLibroDiario_RowPrePaint(object? sender, DataGridViewRowPrePaintEventArgs e)
@@ -400,33 +704,44 @@ namespace App_Contable.Presentacion
             switch (fila.TipoFila)
             {
                 case TipoFilaVisual.EncabezadoPartida:
-                    row.DefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
-                    row.DefaultCellStyle.Font      = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
-                    row.DefaultCellStyle.ForeColor = Color.FromArgb(30, 41, 59);
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(30, 96, 255);
+                    row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(30, 96, 255);
+                    row.DefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
+                    row.DefaultCellStyle.ForeColor = Color.White;
+                    row.DefaultCellStyle.SelectionForeColor = Color.White;
                     break;
                 case TipoFilaVisual.Subcuenta:
                     row.DefaultCellStyle.BackColor = Color.White;
-                    row.DefaultCellStyle.Font      = new Font("Segoe UI", 9f);
+                    row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(241, 245, 249);
+                    row.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(71, 85, 105);
+                    row.DefaultCellStyle.SelectionForeColor = Color.FromArgb(15, 23, 42);
                     break;
                 case TipoFilaVisual.CuentaPrincipal:
                     row.DefaultCellStyle.BackColor = Color.White;
-                    row.DefaultCellStyle.Font      = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
+                    row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(241, 245, 249);
+                    row.DefaultCellStyle.Font = new Font("Segoe UI", 9.5f);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
+                    row.DefaultCellStyle.SelectionForeColor = Color.FromArgb(15, 23, 42);
                     break;
                 case TipoFilaVisual.ConceptoGlosa:
                     row.DefaultCellStyle.BackColor = Color.White;
-                    row.DefaultCellStyle.Font      = new Font("Segoe UI", 8.5f, FontStyle.Italic);
+                    row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(241, 245, 249);
+                    row.DefaultCellStyle.Font = new Font("Segoe UI", 8.5f, FontStyle.Italic);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(100, 116, 139);
+                    row.DefaultCellStyle.SelectionForeColor = Color.FromArgb(100, 116, 139);
                     break;
                 case TipoFilaVisual.Separador:
                     row.DefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
+                    row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(248, 250, 252);
                     row.Height = 12;
                     break;
                 case TipoFilaVisual.TotalSumasIguales:
-                    row.DefaultCellStyle.BackColor = Color.FromArgb(226, 232, 240);
-                    row.DefaultCellStyle.Font      = new Font("Segoe UI", 10f, FontStyle.Bold);
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
+                    row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(241, 245, 249);
+                    row.DefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
+                    row.DefaultCellStyle.SelectionForeColor = Color.FromArgb(15, 23, 42);
                     break;
             }
         }
@@ -437,23 +752,35 @@ namespace App_Contable.Presentacion
             var row = dgvLibroDiario.Rows[e.RowIndex];
             if (row.Tag is not FilaLibroDiarioVisual fila) return;
 
+            if (fila.TipoFila == TipoFilaVisual.EncabezadoPartida)
+            {
+                if (e.CellStyle != null)
+                {
+                    e.CellStyle.BackColor = Color.FromArgb(30, 96, 255);
+                    e.CellStyle.ForeColor = Color.White;
+                    e.CellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
+                }
+                return;
+            }
+
             if (e.CellStyle != null && e.ColumnIndex == colFecha.Index && !string.IsNullOrEmpty(fila.Fecha))
             {
                 e.CellStyle.ForeColor = Color.FromArgb(71, 85, 105);
-                e.CellStyle.Font      = new Font("Segoe UI", 9f, FontStyle.Regular);
+                e.CellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             }
         }
 
         private void ActualizarBarraResumen()
         {
+            var culture = new System.Globalization.CultureInfo("en-US");
             var asientos = _servicio.ObtenerAsientos();
             decimal totalDebe  = asientos.Sum(a => a.TotalDebe);
             decimal totalHaber = asientos.Sum(a => a.TotalHaber);
             bool todosCuadrados = asientos.All(a => a.EstaCuadrado);
 
             lblTotalAsientos.Text    = $"Asientos: {asientos.Count}";
-            lblTotalDebeGlobal.Text  = $"Total Debe: {totalDebe:C2}";
-            lblTotalHaberGlobal.Text = $"Total Haber: {totalHaber:C2}";
+            lblTotalDebeGlobal.Text  = $"Total Debe: {totalDebe.ToString("C2", culture)}";
+            lblTotalHaberGlobal.Text = $"Total Haber: {totalHaber.ToString("C2", culture)}";
 
             if (!asientos.Any())
             {
@@ -693,11 +1020,21 @@ namespace App_Contable.Presentacion
             }
             y += 18;
 
-            // Badge de Destino ([Local] o [BD - Pendiente])
+            // Badge de Destino ([Local], [Local · Importado] o [BD - Pendiente])
+            bool esImportado = item.Destino == TipoDestinoLibro.Importado;
             bool esLocal = item.Destino == TipoDestinoLibro.Local;
-            Color badgeBg = esLocal ? Color.FromArgb(241, 245, 249) : Color.FromArgb(239, 246, 255);
-            Color badgeBorder = esLocal ? Color.FromArgb(203, 213, 225) : Color.FromArgb(191, 219, 254);
-            Color badgeFg = esLocal ? Color.FromArgb(51, 65, 85) : Color.FromArgb(29, 78, 216);
+
+            Color badgeBg = esImportado
+                ? Color.FromArgb(240, 253, 244)
+                : (esLocal ? Color.FromArgb(241, 245, 249) : Color.FromArgb(239, 246, 255));
+
+            Color badgeBorder = esImportado
+                ? Color.FromArgb(187, 247, 208)
+                : (esLocal ? Color.FromArgb(203, 213, 225) : Color.FromArgb(191, 219, 254));
+
+            Color badgeFg = esImportado
+                ? Color.FromArgb(22, 101, 52)
+                : (esLocal ? Color.FromArgb(51, 65, 85) : Color.FromArgb(29, 78, 216));
 
             var badgeSize = TextRenderer.MeasureText(item.BadgeTexto, _fntBadge);
             var badgeRect = new Rectangle(x, y - 1, badgeSize.Width + 10, 18);

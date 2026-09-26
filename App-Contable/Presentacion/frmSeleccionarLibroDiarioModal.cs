@@ -16,9 +16,13 @@ namespace App_Contable.Presentacion
         /// </summary>
         public LibroDiarioInstancia? LibroSeleccionado { get; private set; }
 
-        public frmSeleccionarLibroDiarioModal()
+        public frmSeleccionarLibroDiarioModal(string? subtitulo = null)
         {
             InitializeComponent();
+            if (!string.IsNullOrWhiteSpace(subtitulo))
+            {
+                lblSubtitulo.Text = subtitulo;
+            }
             ConfigurarModal();
             this.Load += (s, e) => CargarLibros();
         }

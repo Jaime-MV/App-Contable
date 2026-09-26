@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using App_Contable.Logica;
@@ -10,35 +11,34 @@ namespace App_Contable.Presentacion
 {
     public partial class frmBalanceGeneral : Form
     {
+        private static readonly CultureInfo UsCulture = new("en-US");
         private readonly BalanceGeneralServicio _servicio = BalanceGeneralServicio.Instancia;
         private DatosBalanceGeneral _balanceActual = new();
-        private bool _modoEjemplo = false; // MODO AUTOMÁTICO ACTIVO POR DEFECTO
+        private LibroDiarioInstancia? _libroActual = null;
 
-        public LibroDiarioInstancia? LibroActivo { get; set; }
-
-        public frmBalanceGeneral(LibroDiarioInstancia? libroSeleccionado = null)
+        public frmBalanceGeneral()
         {
             InitializeComponent();
-            LibroActivo = libroSeleccionado;
             ConfigurarFormulario();
-            // Cargar en modo automático calculando desde el Libro Diario y Mayor
-            CargarDatos(usarEjemplo: false);
+            ActualizarVisibilidad();
+        }
+
+        public frmBalanceGeneral(LibroDiarioInstancia libro)
+        {
+            InitializeComponent();
+            _libroActual = libro;
+            ConfigurarFormulario();
+            dtpFechaCorte.Value = libro.FechaFin;
+            CargarDatos();
         }
 
         private void ConfigurarFormulario()
         {
-            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.UserPaint, true);
 
-            if (LibroActivo != null)
-            {
-                lblTituloSeccion.Text = $"BALANCE GENERAL — {LibroActivo.Nombre.ToUpperInvariant()}";
-                dtpFechaCorte.Value = LibroActivo.FechaFin;
-            }
-            else
-            {
-                lblTituloSeccion.Text = "BALANCE GENERAL";
-                dtpFechaCorte.Value = DateTime.Today;
-            }
+            dtpFechaCorte.Value = DateTime.Today;
 
             dgvBalanceGeneral.AutoGenerateColumns = false;
             dgvBalanceGeneral.DoubleBuffered(true);
@@ -48,86 +48,141 @@ namespace App_Contable.Presentacion
                 col.SortMode = DataGridViewColumnSortMode.NotSortable;
             }
 
+            AplicarEstiloGrilla();
+
+            // Centrar dinámicamente el placeholder vacío
+            pnlEstadoVacio.Resize += (s, e) => CentrarCardVacio();
+            CentrarCardVacio();
+
             dgvBalanceGeneral.CellFormatting += DgvBalanceGeneral_CellFormatting;
             dgvBalanceGeneral.RowPrePaint += DgvBalanceGeneral_RowPrePaint;
 
-            // Recalcular automáticamente si el usuario cambia la fecha de corte
+            // Recalcular al cambiar fecha
             dtpFechaCorte.ValueChanged += (s, e) =>
             {
-                if (!_modoEjemplo)
-                {
-                    CargarDatos(usarEjemplo: false);
-                }
+                if (_libroActual != null) CargarDatos();
             };
 
-            // Suscribirse a los cambios en los asientos del Libro Diario para sincronización en tiempo real
+            pnlToolbar.Paint += (s, e) =>
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, pnlToolbar.Height - 1, pnlToolbar.Width, pnlToolbar.Height - 1);
+            };
+
+            pnlResumenInferior.Paint += (s, e) =>
+            {
+                using var pen = new Pen(Color.FromArgb(226, 232, 240));
+                e.Graphics.DrawLine(pen, 0, 0, pnlResumenInferior.Width, 0);
+            };
+
+            // Suscribirse a cambios en los asientos contables
             LibroDiarioServicio.Instancia.DatosModificados += OnLibroDiarioModificado;
             this.FormClosed += (s, e) => LibroDiarioServicio.Instancia.DatosModificados -= OnLibroDiarioModificado;
 
-            // Al mostrar el formulario, recalcular con los asientos vigentes
             this.VisibleChanged += (s, e) =>
             {
-                if (this.Visible && !_modoEjemplo)
+                if (this.Visible && _libroActual != null)
                 {
-                    CargarDatos(usarEjemplo: false);
+                    CargarDatos();
                 }
             };
+        }
+
+        private void CentrarCardVacio()
+        {
+            if (pnlEstadoVacio.ClientSize.Width > 0 && pnlEstadoVacio.ClientSize.Height > 0)
+            {
+                int x = Math.Max(10, (pnlEstadoVacio.ClientSize.Width - pnlCardVacio.Width) / 2);
+                int y = Math.Max(20, (pnlEstadoVacio.ClientSize.Height - pnlCardVacio.Height) / 2);
+                pnlCardVacio.Location = new Point(x, y);
+            }
+        }
+
+        private void AplicarEstiloGrilla()
+        {
+            dgvBalanceGeneral.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(201, 218, 236);
+            dgvBalanceGeneral.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
+            dgvBalanceGeneral.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
+            dgvBalanceGeneral.ColumnHeadersDefaultCellStyle.SelectionBackColor = Color.FromArgb(201, 218, 236);
+            dgvBalanceGeneral.ColumnHeadersDefaultCellStyle.SelectionForeColor = Color.FromArgb(15, 23, 42);
+            dgvBalanceGeneral.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            dgvBalanceGeneral.EnableHeadersVisualStyles = false;
+
+            dgvBalanceGeneral.DefaultCellStyle.BackColor = Color.White;
+            dgvBalanceGeneral.DefaultCellStyle.ForeColor = Color.FromArgb(30, 41, 59);
+            dgvBalanceGeneral.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+            dgvBalanceGeneral.DefaultCellStyle.SelectionBackColor = Color.FromArgb(239, 246, 255);
+            dgvBalanceGeneral.DefaultCellStyle.SelectionForeColor = Color.FromArgb(15, 23, 42);
+
+            dgvBalanceGeneral.GridColor = Color.FromArgb(203, 213, 225);
+            dgvBalanceGeneral.BackgroundColor = Color.White;
+            dgvBalanceGeneral.CellBorderStyle = DataGridViewCellBorderStyle.Single;
+            dgvBalanceGeneral.ColumnHeadersHeight = 36;
+            dgvBalanceGeneral.RowTemplate.Height = 28;
         }
 
         private void OnLibroDiarioModificado()
         {
-            if (!_modoEjemplo && IsHandleCreated && !IsDisposed)
+            if (_libroActual != null && IsHandleCreated && !IsDisposed)
             {
-                BeginInvoke(new Action(() => CargarDatos(usarEjemplo: false)));
+                BeginInvoke(new Action(() => CargarDatos()));
             }
         }
 
-        public void CargarDatos(bool usarEjemplo)
+        private void ActualizarVisibilidad()
         {
-            _modoEjemplo = usarEjemplo;
+            bool hayLibroCargado = _libroActual != null;
 
-            if (_modoEjemplo)
+            pnlEstadoVacio.Visible = !hayLibroCargado;
+            dgvBalanceGeneral.Visible = hayLibroCargado;
+            pnlResumenInferior.Visible = hayLibroCargado;
+
+            if (hayLibroCargado)
             {
-                _balanceActual = _servicio.ObtenerDatosEjemplo();
-                btnCalcularMayor.BackColor = Color.White;
-                btnCalcularMayor.ForeColor = Color.FromArgb(71, 85, 105);
-                btnCargarEjemplo.BackColor = Color.FromArgb(241, 245, 249);
-                btnCargarEjemplo.ForeColor = Color.FromArgb(30, 41, 59);
-            }
-            else if (LibroActivo != null)
-            {
-                _balanceActual = _servicio.CalcularDesdeLibro(LibroActivo, dtpFechaCorte.Value.Date);
-                btnCalcularMayor.BackColor = Color.FromArgb(220, 252, 231);
-                btnCalcularMayor.ForeColor = Color.FromArgb(22, 101, 52);
-                btnCargarEjemplo.BackColor = Color.White;
-                btnCargarEjemplo.ForeColor = Color.FromArgb(71, 85, 105);
+                lblTituloSeccion.Text = $"BALANCE GENERAL — {_libroActual!.Nombre.ToUpperInvariant()}";
+                dgvBalanceGeneral.BringToFront();
             }
             else
             {
-                // MODO AUTOMÁTICO: Extrae y calcula los saldos directamente del Libro Mayor
-                _balanceActual = _servicio.CalcularDesdeMayor(dtpFechaCorte.Value.Date);
-                btnCalcularMayor.BackColor = Color.FromArgb(220, 252, 231); // Verde suave indicador activo
-                btnCalcularMayor.ForeColor = Color.FromArgb(22, 101, 52);
-                btnCargarEjemplo.BackColor = Color.White;
-                btnCargarEjemplo.ForeColor = Color.FromArgb(71, 85, 105);
+                lblTituloSeccion.Text = "BALANCE GENERAL";
+                pnlEstadoVacio.BringToFront();
+                CentrarCardVacio();
             }
+        }
+
+        public void CargarDatos()
+        {
+            if (_libroActual == null)
+            {
+                ActualizarVisibilidad();
+                return;
+            }
+
+            ActualizarVisibilidad();
+
+            _balanceActual = _servicio.CalcularDesdeLibro(_libroActual, dtpFechaCorte.Value.Date);
 
             var filas = _servicio.GenerarFilasVisuales(_balanceActual);
             dgvBalanceGeneral.Rows.Clear();
 
             foreach (var fila in filas)
             {
+                string parcialStr = fila.Parcial.HasValue ? fila.Parcial.Value.ToString("$#,##0.00", UsCulture) : string.Empty;
+                string subtotalStr = fila.Subtotal.HasValue ? fila.Subtotal.Value.ToString("$#,##0.00", UsCulture) : string.Empty;
+                string totalStr = fila.Total.HasValue ? fila.Total.Value.ToString("$#,##0.00", UsCulture) : string.Empty;
+
                 int index = dgvBalanceGeneral.Rows.Add(
                     fila.Cuenta,
-                    fila.Parcial.HasValue ? fila.Parcial.Value.ToString("N2") : string.Empty,
-                    fila.Subtotal.HasValue ? fila.Subtotal.Value.ToString("N2") : string.Empty,
-                    fila.Total.HasValue ? fila.Total.Value.ToString("N2") : string.Empty
+                    parcialStr,
+                    subtotalStr,
+                    totalStr
                 );
 
                 dgvBalanceGeneral.Rows[index].Tag = fila;
             }
 
             ActualizarResumen();
+            dgvBalanceGeneral.ClearSelection();
         }
 
         private void DgvBalanceGeneral_RowPrePaint(object? sender, DataGridViewRowPrePaintEventArgs e)
@@ -140,9 +195,8 @@ namespace App_Contable.Presentacion
             switch (fila.TipoFila)
             {
                 case TipoFilaBalance.TituloSeccion:
-                    // Color azul suave de Excel
                     row.DefaultCellStyle.BackColor = Color.FromArgb(217, 225, 242);
-                    row.DefaultCellStyle.Font = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold);
+                    row.DefaultCellStyle.Font = new Font("Segoe UI Semibold", 10f, FontStyle.Bold);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
                     break;
 
@@ -159,14 +213,12 @@ namespace App_Contable.Presentacion
                     break;
 
                 case TipoFilaBalance.Subtotal:
-                    // Fondo verde claro como en Excel
                     row.DefaultCellStyle.BackColor = Color.FromArgb(226, 239, 218);
                     row.DefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
                     break;
 
                 case TipoFilaBalance.TotalPrincipal:
-                    // Fondo verde destacado como en Excel
                     row.DefaultCellStyle.BackColor = Color.FromArgb(169, 208, 142);
                     row.DefaultCellStyle.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
                     row.DefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
@@ -202,52 +254,51 @@ namespace App_Contable.Presentacion
 
         private void ActualizarResumen()
         {
-            lblTotalActivo.Text = $"Total Activo: {_balanceActual.TotalActivo:C2}";
-            lblTotalPasivoPatrimonio.Text = $"Total Pasivo + Pat.: {_balanceActual.TotalPasivoMasPatrimonio:C2}";
-
-            string origen = _modoEjemplo ? "(Datos de Prueba)" : "(Automático desde Asientos / Mayor)";
+            lblTotalActivo.Text = $"Total Activo: {_balanceActual.TotalActivo.ToString("$#,##0.00", UsCulture)}";
+            lblTotalPasivoPatrimonio.Text = $"Total Pasivo + Pat.: {_balanceActual.TotalPasivoMasPatrimonio.ToString("$#,##0.00", UsCulture)}";
 
             if (_balanceActual.EstaCuadrado)
             {
-                lblBadgeEstado.Text = $"✓ Balance Cuadrado {origen} - Activo = Pasivo + Patrimonio";
+                lblBadgeEstado.Text = "✓ Balance General Cuadrado (Activo = Pasivo + Patrimonio)";
                 lblBadgeEstado.ForeColor = Color.FromArgb(22, 163, 74);
             }
             else
             {
-                lblBadgeEstado.Text = $"⚠ Descuadre {origen}: {_balanceActual.Diferencia:C2}";
+                lblBadgeEstado.Text = $"⚠ Descuadre en Balance General: {_balanceActual.Diferencia.ToString("$#,##0.00", UsCulture)}";
                 lblBadgeEstado.ForeColor = Color.FromArgb(220, 38, 38);
             }
         }
 
-        private void btnCargarEjemplo_Click(object sender, EventArgs e)
+        private void btnCargarDesdeLibro_Click(object sender, EventArgs e)
         {
-            CargarDatos(usarEjemplo: true);
-        }
-
-        private void btnCalcularMayor_Click(object sender, EventArgs e)
-        {
-            CargarDatos(usarEjemplo: false);
+            using var modal = new frmSeleccionarLibroDiarioModal("Escoge un libro diario para procesar automáticamente su Balance General.");
+            if (modal.ShowDialog(this) == DialogResult.OK && modal.LibroSeleccionado != null)
+            {
+                _libroActual = modal.LibroSeleccionado;
+                dtpFechaCorte.Value = _libroActual.FechaFin;
+                CargarDatos();
+            }
         }
 
         private void btnActualizar_Click(object sender, EventArgs e)
         {
-            CargarDatos(usarEjemplo: _modoEjemplo);
+            if (_libroActual != null)
+            {
+                CargarDatos();
+            }
+            else
+            {
+                btnCargarDesdeLibro_Click(sender, e);
+            }
         }
 
         private void btnFiltrar_Click(object sender, EventArgs e)
         {
-            CargarDatos(usarEjemplo: false);
-        }
-
-        private void btnVolver_Click(object? sender, EventArgs e)
-        {
-            var nav = NavegacionHelper.ObtenerNavegacion(this);
-            if (nav != null)
+            if (_libroActual != null)
             {
-                nav.AbrirFormularioEnPanel(new frmInicioBalanceGeneral());
-                return;
+                CargarDatos();
             }
-            this.Close();
         }
     }
 }
+

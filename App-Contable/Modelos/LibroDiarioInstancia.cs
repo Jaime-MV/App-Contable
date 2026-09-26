@@ -7,7 +7,8 @@ namespace App_Contable.Modelos
     public enum TipoDestinoLibro
     {
         Local,
-        PostgreSQL
+        PostgreSQL,
+        Importado
     }
 
     /// <summary>
@@ -25,7 +26,12 @@ namespace App_Contable.Modelos
         public DateTime FechaModificacion { get; set; } = DateTime.Now;
         public List<AsientoContable> Asientos { get; set; } = new();
 
-        public string TextoBadgeDestino => DestinoGuardado == TipoDestinoLibro.Local ? "[Local]" : "[BD - Pendiente]";
+        public string TextoBadgeDestino => DestinoGuardado switch
+        {
+            TipoDestinoLibro.Local => "[Local]",
+            TipoDestinoLibro.Importado => "[Local · Importado]",
+            _ => "[BD - Pendiente]"
+        };
 
         public string TextoPeriodo => $"{FechaInicio:dd/MM/yyyy} — {FechaFin:dd/MM/yyyy}";
 

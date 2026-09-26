@@ -42,6 +42,9 @@ namespace App_Contable.Presentacion
             btnDashGuardarBD = new Button();
             btnDashNuevo = new Button();
             lblAccionesHeader = new Label();
+            lblHerramientasHeader = new Label();
+            btnDashImportar = new Button();
+            btnDashExportar = new Button();
             pnlListaAsientos = new Panel();
             lstLibros = new LibroDiarioInstanciaListBox();
             txtBuscarDash = new TextBox();
@@ -346,7 +349,11 @@ namespace App_Contable.Presentacion
             // 
             // pnlAcciones
             // 
+            pnlAcciones.AutoScroll = true;
             pnlAcciones.BackColor = Color.White;
+            pnlAcciones.Controls.Add(btnDashExportar);
+            pnlAcciones.Controls.Add(btnDashImportar);
+            pnlAcciones.Controls.Add(lblHerramientasHeader);
             pnlAcciones.Controls.Add(btnDashEliminar);
             pnlAcciones.Controls.Add(btnDashGuardarBD);
             pnlAcciones.Controls.Add(btnDashNuevo);
@@ -358,6 +365,57 @@ namespace App_Contable.Presentacion
             pnlAcciones.Padding = new Padding(18, 16, 18, 16);
             pnlAcciones.Size = new Size(320, 519);
             pnlAcciones.TabIndex = 0;
+            // 
+            // btnDashExportar
+            // 
+            btnDashExportar.BackColor = Color.FromArgb(248, 250, 252);
+            btnDashExportar.Cursor = Cursors.Hand;
+            btnDashExportar.Dock = DockStyle.Top;
+            btnDashExportar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnDashExportar.FlatStyle = FlatStyle.Flat;
+            btnDashExportar.Font = new Font("Segoe UI", 9.5F);
+            btnDashExportar.ForeColor = Color.FromArgb(30, 41, 59);
+            btnDashExportar.Location = new Point(18, 435);
+            btnDashExportar.Margin = new Padding(0, 5, 0, 5);
+            btnDashExportar.Name = "btnDashExportar";
+            btnDashExportar.Padding = new Padding(11, 0, 0, 0);
+            btnDashExportar.Size = new Size(284, 80);
+            btnDashExportar.TabIndex = 5;
+            btnDashExportar.Text = "📤  Exportar Libro Diario\r\nDescargar libro seleccionado como CSV o PDF";
+            btnDashExportar.TextAlign = ContentAlignment.MiddleLeft;
+            btnDashExportar.UseVisualStyleBackColor = false;
+            // 
+            // btnDashImportar
+            // 
+            btnDashImportar.BackColor = Color.FromArgb(248, 250, 252);
+            btnDashImportar.Cursor = Cursors.Hand;
+            btnDashImportar.Dock = DockStyle.Top;
+            btnDashImportar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnDashImportar.FlatStyle = FlatStyle.Flat;
+            btnDashImportar.Font = new Font("Segoe UI", 9.5F);
+            btnDashImportar.ForeColor = Color.FromArgb(30, 41, 59);
+            btnDashImportar.Location = new Point(18, 355);
+            btnDashImportar.Margin = new Padding(0, 5, 0, 5);
+            btnDashImportar.Name = "btnDashImportar";
+            btnDashImportar.Padding = new Padding(11, 0, 0, 0);
+            btnDashImportar.Size = new Size(284, 80);
+            btnDashImportar.TabIndex = 4;
+            btnDashImportar.Text = "📥  Importar Libro Diario\r\nCargar libro desde archivo CSV o PDF";
+            btnDashImportar.TextAlign = ContentAlignment.MiddleLeft;
+            btnDashImportar.UseVisualStyleBackColor = false;
+            // 
+            // lblHerramientasHeader
+            // 
+            lblHerramientasHeader.AutoSize = true;
+            lblHerramientasHeader.Dock = DockStyle.Top;
+            lblHerramientasHeader.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblHerramientasHeader.ForeColor = Color.FromArgb(30, 41, 59);
+            lblHerramientasHeader.Location = new Point(18, 295);
+            lblHerramientasHeader.Name = "lblHerramientasHeader";
+            lblHerramientasHeader.Padding = new Padding(0, 16, 0, 10);
+            lblHerramientasHeader.Size = new Size(160, 45);
+            lblHerramientasHeader.TabIndex = 3;
+            lblHerramientasHeader.Text = "Herramientas de Datos";
             // 
             // btnDashEliminar
             // 
@@ -760,6 +818,9 @@ namespace App_Contable.Presentacion
         private System.Windows.Forms.Button   btnDashNuevo;
         private System.Windows.Forms.Button   btnDashGuardarBD;
         private System.Windows.Forms.Button   btnDashEliminar;
+        private System.Windows.Forms.Label    lblHerramientasHeader;
+        private System.Windows.Forms.Button   btnDashImportar;
+        private System.Windows.Forms.Button   btnDashExportar;
         // Grilla
         private System.Windows.Forms.Panel    pnlGrillaContenedor;
         private System.Windows.Forms.DataGridView dgvLibroDiario;

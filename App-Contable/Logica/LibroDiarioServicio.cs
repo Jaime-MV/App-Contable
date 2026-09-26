@@ -32,6 +32,16 @@ namespace App_Contable.Logica
             NotificarCambios();
         }
 
+        public void CargarAsientos(IEnumerable<AsientoContable> asientos)
+        {
+            _asientos.Clear();
+            if (asientos != null)
+            {
+                _asientos.AddRange(asientos);
+            }
+            NotificarCambios();
+        }
+
         public int ObtenerSiguienteNumero()
         {
             return _asientos.Any() ? _asientos.Max(a => a.NumeroAsiento) + 1 : 1;
@@ -197,96 +207,68 @@ namespace App_Contable.Logica
                     TipoFila = TipoFilaVisual.EncabezadoPartida
                 });
 
-                // 2. Movimientos al DEBE (Cargos)
-                var cargos = asiento.Movimientos.Where(m => m.Movimiento == TipoMovimiento.Debe).ToList();
-                var gruposDebe = cargos.GroupBy(m => m.CuentaPrincipal);
-
-                foreach (var grupo in gruposDebe)
+                // 2. Movimientos contables en orden exacto de lectura / registro
+                foreach (var mov in asiento.Movimientos)
                 {
-                    decimal sumaCuentaPrincipal = grupo.Sum(m => m.Monto);
-                    bool tieneSubcuentas = grupo.Any(m => !string.IsNullOrWhiteSpace(m.Subcuenta));
+                    bool esHaber = mov.Movimiento == TipoMovimiento.Haber;
+                    string cuentaTexto = esHaber ? $"   {mov.CuentaPrincipal}" : mov.CuentaPrincipal;
 
-                    // Fila de Cuenta Principal en Debe
                     resultado.Add(new FilaLibroDiarioVisual
                     {
                         NumeroAsiento = asiento.NumeroAsiento,
                         Fecha = string.Empty,
-                        Cuenta = grupo.Key,
+                        Cuenta = cuentaTexto,
                         Parcial = null,
-                        Debe = sumaCuentaPrincipal,
-                        Haber = null,
+                        Debe = mov.Movimiento == TipoMovimiento.Debe ? mov.Monto : null,
+                        Haber = mov.Movimiento == TipoMovimiento.Haber ? mov.Monto : null,
                         TipoFila = TipoFilaVisual.CuentaPrincipal
                     });
 
-                    // Subcuentas en columna Parcial
-                    if (tieneSubcuentas)
+                    // Subcuenta si existe
+                    if (!string.IsNullOrWhiteSpace(mov.Subcuenta))
                     {
-                        foreach (var mov in grupo.Where(m => !string.IsNullOrWhiteSpace(m.Subcuenta)))
+                        resultado.Add(new FilaLibroDiarioVisual
                         {
-                            resultado.Add(new FilaLibroDiarioVisual
-                            {
-                                NumeroAsiento = asiento.NumeroAsiento,
-                                Fecha = string.Empty,
-                                Cuenta = $"    {mov.Subcuenta}",
-                                Parcial = mov.Monto,
-                                Debe = null,
-                                Haber = null,
-                                TipoFila = TipoFilaVisual.Subcuenta
-                            });
-                        }
+                            NumeroAsiento = asiento.NumeroAsiento,
+                            Fecha = string.Empty,
+                            Cuenta = $"      {mov.Subcuenta}",
+                            Parcial = mov.Monto,
+                            Debe = null,
+                            Haber = null,
+                            TipoFila = TipoFilaVisual.Subcuenta
+                        });
                     }
                 }
 
-                // 3. Movimientos al HABER (Abonos)
-                var abonos = asiento.Movimientos.Where(m => m.Movimiento == TipoMovimiento.Haber).ToList();
-                var gruposHaber = abonos.GroupBy(m => m.CuentaPrincipal);
-
-                foreach (var grupo in gruposHaber)
+                // 3. Glosa / Concepto Explicativo
+                if (!string.IsNullOrWhiteSpace(asiento.Concepto))
                 {
-                    decimal sumaCuentaPrincipal = grupo.Sum(m => m.Monto);
-                    bool tieneSubcuentas = grupo.Any(m => !string.IsNullOrWhiteSpace(m.Subcuenta));
+                    string textoGlosa = asiento.Concepto.Trim().StartsWith("c/", StringComparison.OrdinalIgnoreCase) 
+                        ? asiento.Concepto 
+                        : $"c/ {asiento.Concepto}";
 
-                    // Fila de Cuenta Principal en Haber (sangría contable)
                     resultado.Add(new FilaLibroDiarioVisual
                     {
                         NumeroAsiento = asiento.NumeroAsiento,
                         Fecha = string.Empty,
-                        Cuenta = $"    a/ {grupo.Key}",
+                        Cuenta = $"   {textoGlosa}",
                         Parcial = null,
                         Debe = null,
-                        Haber = sumaCuentaPrincipal,
-                        TipoFila = TipoFilaVisual.CuentaPrincipal
+                        Haber = null,
+                        TipoFila = TipoFilaVisual.ConceptoGlosa
                     });
-
-                    // Subcuentas en columna Parcial
-                    if (tieneSubcuentas)
-                    {
-                        foreach (var mov in grupo.Where(m => !string.IsNullOrWhiteSpace(m.Subcuenta)))
-                        {
-                            resultado.Add(new FilaLibroDiarioVisual
-                            {
-                                NumeroAsiento = asiento.NumeroAsiento,
-                                Fecha = string.Empty,
-                                Cuenta = $"        {mov.Subcuenta}",
-                                Parcial = mov.Monto,
-                                Debe = null,
-                                Haber = null,
-                                TipoFila = TipoFilaVisual.Subcuenta
-                            });
-                        }
-                    }
                 }
 
-                // 4. Glosa / Concepto Explicativo
+                // 4. Fila de Totales del Asiento
                 resultado.Add(new FilaLibroDiarioVisual
                 {
                     NumeroAsiento = asiento.NumeroAsiento,
                     Fecha = string.Empty,
-                    Cuenta = $"    V/ {asiento.Concepto}",
+                    Cuenta = "   Totales",
                     Parcial = null,
-                    Debe = null,
-                    Haber = null,
-                    TipoFila = TipoFilaVisual.ConceptoGlosa
+                    Debe = asiento.TotalDebe,
+                    Haber = asiento.TotalHaber,
+                    TipoFila = TipoFilaVisual.TotalSumasIguales
                 });
 
                 // 5. Separador visual entre partidas
@@ -299,21 +281,6 @@ namespace App_Contable.Logica
                     Debe = null,
                     Haber = null,
                     TipoFila = TipoFilaVisual.Separador
-                });
-            }
-
-            // 6. Fila final de Sumas Iguales
-            if (asientosFiltrados.Any())
-            {
-                resultado.Add(new FilaLibroDiarioVisual
-                {
-                    NumeroAsiento = 0,
-                    Fecha = string.Empty,
-                    Cuenta = "SUMAS IGUALES",
-                    Parcial = null,
-                    Debe = totalDebeGlobal,
-                    Haber = totalHaberGlobal,
-                    TipoFila = TipoFilaVisual.TotalSumasIguales
                 });
             }
 
